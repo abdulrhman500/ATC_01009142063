@@ -1,0 +1,29 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "allowJs": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+     "baseUrl": "./src",
+    "paths": {
+      "@api/*": ["api/*"],
+      "@application/*": ["application/*"],
+      "@domain/*": ["domain/*"],
+      "@models/*": ["domain/models/*"],
+      "@value-objects/*": ["domain/models/value-objects/*"],
+      "@shared/*": ["shared/*"],
+      "@exceptions/*": ["shared/exceptions/*"]
+    }
+  }
+}
