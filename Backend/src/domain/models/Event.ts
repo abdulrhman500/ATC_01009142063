@@ -1,82 +1,76 @@
 
-import UserId from "@value-objects/user/UserId";
 import EventName from "@value-objects/events/EventName";
-import EventDescription from "./value-objects/events/EventDescription";
-import EventDate from "./value-objects/events/EventDate";
-import EventLocation from "./value-objects/events/EventLocation";
+import EventDescription from "@value-objects/events/EventDescription";
+import EventDate from "@value-objects/events/EventDate";
+import Venue from "@domain/models/value-objects/events/Venue";
+import EventPrice from "@value-objects/events/EventPrice";
+import EventPhotoUrl from "@value-objects/events/EventPhotoUrl";
 
-
-/**
- * Event class representing an event in the system.
- * @class
- */
 
 export default class Event {
     readonly id: number;
     readonly name: EventName;
     readonly description: EventDescription;
     readonly date: EventDate;
-    readonly location: EventLocation;
-    readonly createdAt: Date;
-    readonly lastupdatedAt: Date;
-    readonly createdBy: UserId;
-    readonly updatedBy: UserId;
+    readonly location: Venue;
+    readonly price: EventPrice;
+    readonly photoUrl: EventPhotoUrl;
 
-    constructor(id: number, name: EventName, description: EventDescription, date: EventDate, location: EventLocation, createdBy: UserId, createdAt: Date, updatedBy: UserId, lastupdatedAt: Date) {
 
+    private constructor(id: number, name: EventName, description: EventDescription, date: EventDate, location: Venue, price: EventPrice, photoUrl: EventPhotoUrl) {
+        if (id <= 0) {
+            throw new Error("Event ID must be a positive number");
+        }
 
         this.id = id;
         this.name = name;
         this.description = description;
         this.date = date;
         this.location = location;
-        this.createdBy = createdBy;
-        this.createdAt = createdAt;
-        this.updatedBy = updatedBy;
-        this.lastupdatedAt = lastupdatedAt;
+      
+        this.price = price;
+        this.photoUrl = photoUrl;
+
     }
 
+    public static builder = class EventBuilder {
+        private id?: number;
+        private name?: EventName;
+        private description?: EventDescription;
+        private date?: EventDate;
+        private location?: Venue;
+        // private createdAt?: Date;
+        // private lastupdatedAt?: Date;
+        // private createdBy?: UserId;
+        // private updatedBy?: UserId;
+        private price?: EventPrice;
+        private photoUrl?: EventPhotoUrl;
 
-    public static Builder = class EventBuilder {
-        private id: number | undefined;
-        private name: EventName | undefined;
-        private description: EventDescription | undefined;
-        private date: EventDate | undefined;
-        private location: EventLocation | undefined;
-        private createdAt: Date | undefined;
-        private lastupdatedAt: Date | undefined;
-        private createdBy: UserId | undefined;
-        private updatedBy: UserId | undefined;
-
-        setId(id: number): EventBuilder { this.id = id; return this; }
-        setName(name: EventName): EventBuilder { this.name = name; return this; }
-        setDescription(description: EventDescription): EventBuilder { this.description = description; return this; }
-        setDate(date: EventDate): EventBuilder { this.date = date; return this; }
-        setLocation(location: EventLocation): EventBuilder { this.location = location; return this; }
-        setCreatedAt(date: Date): EventBuilder { this.createdAt = date; return this; }
-        setCreatedBy(userId: UserId): EventBuilder { this.createdBy = userId; return this; }
-        setUpdatedAt(date: Date): EventBuilder { this.lastupdatedAt = date; return this; }
-        setUpdatedBy(userId: UserId): EventBuilder { this.updatedBy = userId; return this; }
+        setId(id: number): this { this.id = id; return this; }
+        setName(name: EventName): this { this.name = name; return this; }
+        setDescription(description: EventDescription): this { this.description = description; return this; }
+        setDate(date: EventDate): this { this.date = date; return this; }
+        setLocation(location: Venue): this { this.location = location; return this; }
+        setPrice(price: EventPrice): this { this.price = price; return this; }
+        setPhotoUrl(url: EventPhotoUrl): this { this.photoUrl = url; return this; }
 
         build(): Event {
-            if (this.id == null || !this.name || !this.description || !this.date || !this.location || this.createdAt == null || this.createdBy == null || this.updatedBy == null || this.lastupdatedAt == null) {
-                throw new Error("EventBuilder requires id, name, description, date, location, createdAt, createdBy, updatedBy, and lastupdatedAt.");
+            if (
+                this.id == null || !this.name || !this.description || !this.date || !this.location ||
+                !this.price || !this.photoUrl
+            ) {
+                throw new Error("Missing required fields.");
             }
-            // the builder is used to make the build process easier
-            // and to make the code more readable
 
             return new Event(
                 this.id,
                 this.name,
-                this.description ?? new EventDescription("Default Description"),
+                this.description,
                 this.date,
                 this.location,
-                this.createdBy,
-                this.createdAt,
-                this.updatedBy,
-                this.lastupdatedAt
+                this.price,
+                this.photoUrl
             );
-
         }
     }
 }

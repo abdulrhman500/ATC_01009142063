@@ -4,7 +4,7 @@ export default class EventDate {
 
     constructor(value: Date) {
         if (!(value instanceof Date) || isNaN(value.getTime())) {
-             throw new Error("Invalid date format for EventDate.");
+            throw new Error("Invalid date format for EventDate.");
         }
         if (value < new Date()) {
             throw new Error("Event date cannot be in the past.");

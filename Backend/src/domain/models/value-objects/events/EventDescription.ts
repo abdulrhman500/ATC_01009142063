@@ -1,5 +1,5 @@
 
-const MAX_DESCRIPTION_LENGTH = 10000;
+const MAX_DESCRIPTION_LENGTH = 1000;
 
 export default class EventDescription {
     public readonly value: string;
@@ -11,8 +11,6 @@ export default class EventDescription {
         if (description.length > MAX_DESCRIPTION_LENGTH) {
             throw new Error(`Event description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters.`);
         }
-
-
         this.value = description;
     }
 
