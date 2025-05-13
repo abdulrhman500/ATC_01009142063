@@ -1,4 +1,4 @@
-import { RegisterUserCommand } from "../commands/RegisterUserCommand";
+import { RegisterUserCommand } from "@application/user/commands/RegisterUserCommand";
 import IPasswordHasher from "@domain/user/interfaces/IPasswordHasher";
 import { IUserRepository } from "@domain/user/interfaces/IUserRepository"; // Interface in Domain
 import User from "@domain/user/User"; // Domain Entity
@@ -6,19 +6,24 @@ import Name from "@domain/user/value-objects/UserName";
 import Email from "@domain/user/value-objects/UserEmail";
 import Username from "@domain/user/value-objects/UserUsername";
 import UserRole from "@domain/user/value-objects/UserRole";
-// Assuming UserId and PasswordHash value objects are also defined in Domain
+import { inject, injectable } from "inversify";
+import { TYPES } from "@src/types";
 
+@injectable()
 export class RegisterUserHandler {
     private readonly userRepository: IUserRepository;
     private readonly passwordHasher: IPasswordHasher;
 
     // Dependencies injected in the constructor
-    constructor(userRepository: IUserRepository, passwordHasher: IPasswordHasher) {
+    constructor(
+        @inject(TYPES.IUserRepository) userRepository: IUserRepository,
+        @inject(TYPES.IPasswordHasher) passwordHasher: IPasswordHasher
+    ){
         this.userRepository = userRepository;
         this.passwordHasher = passwordHasher;
     }
 
-    public async execute(command: RegisterUserCommand): Promise<void> {
+    public async execute(command: RegisterUserCommand): Promise<User> {
         // 1. Use Password Hashing Service from Infrastructure (via Domain Interface)
         const passwordHash = await this.passwordHasher.hash(command.password);
 
@@ -39,7 +44,7 @@ export class RegisterUserHandler {
 
         // 3. Create the User Domain Model using the Value Objects (including the hash)
         const newUser = new User(
-            undefined, 
+            undefined,
             name,
             email,
             username,
@@ -49,7 +54,9 @@ export class RegisterUserHandler {
         );
 
         // 4. Use the Repository (Domain Interface) to Save
-        await this.userRepository.save(newUser);
+        const savedUser: User = await this.userRepository.save(newUser);
+
+        return savedUser;
 
 
     }

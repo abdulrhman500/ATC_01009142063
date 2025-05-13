@@ -2,7 +2,8 @@
   "extends": "@tsconfig/node20/tsconfig.json",
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    "src/bootstrap.ts" 
 , "src/inversify.config.ts"  ],
   "exclude": [
     "node_modules",
@@ -10,7 +11,7 @@
   ],
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "allowJs": false,
     "experimentalDecorators": true,

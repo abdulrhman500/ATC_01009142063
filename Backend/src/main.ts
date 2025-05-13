@@ -1,8 +1,8 @@
 import "reflect-metadata"; // Keep this at the very top
+import 'module-alias/register';
 import express from 'express';
 import { InversifyExpressServer } from "inversify-express-utils";
 import {container} from "./inversify.config";
-
 import * as bodyParser from "body-parser";
 
 // Import your controller files to ensure decorators are processed

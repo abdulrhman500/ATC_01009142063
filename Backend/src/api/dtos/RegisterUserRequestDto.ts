@@ -11,7 +11,7 @@ export class RegisterUserDtoRequest {
     email!: string;
 
     @IsNotEmpty({ message: "Password is required" })
-    @MinLength(8, { message: "Password must be at least 8 characters long" }) // Example validation rule
+    @MinLength(8, { message: "Password must be at least 8 characters long" })
     password!: string;
 
     @IsNotEmpty({ message: "Username is required" })
@@ -22,10 +22,9 @@ export class RegisterUserDtoRequest {
     @IsString()
     firstName!: string;
 
-    @IsOptional() // Middle name is optional
+    @IsOptional()
     @IsString()
-    // @Transform(({ value }) => value ?? '') // Optional: Use if you strictly need '' instead of undefined/null when not provided
-    middleName?: string; // Use `?` to indicate it's optional in TypeScript
+    middleName?: string;
 
     @IsNotEmpty({ message: "Last name is required" })
     @IsString()
