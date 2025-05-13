@@ -1,6 +1,9 @@
-import UsernameException from '../../../../shared/exceptions/UsernameException';
+import UsernameException from '@shared/exceptions/UsernameException';
 
 export default class UserUsername {
+    equals(newUsername: UserUsername) {
+        throw new Error("Method not implemented.");
+    }
     private static readonly USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
     private static readonly MIN_LENGTH = 3;
     private static readonly MAX_LENGTH = 30;
@@ -21,7 +24,7 @@ export default class UserUsername {
         return username;
     }
 
-    public getUsername(): string {
+    public getValue(): string {
         return this.username;
     }
 }

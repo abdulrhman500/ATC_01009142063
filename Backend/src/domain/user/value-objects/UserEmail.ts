@@ -1,6 +1,12 @@
-import EmailException from "../../../../shared/exceptions/EmailException";
+import EmailException from "@shared/exceptions/EmailException";
 
 export default class UserEmail {
+
+    public equals(newEmail: UserEmail): boolean {
+        if (!newEmail) return false;
+        return this.email.toLowerCase() === newEmail.getValue().toLowerCase();
+    }
+
     private static readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     private static readonly MAX_LENGTH = 255;
 
@@ -20,7 +26,8 @@ export default class UserEmail {
         return email;
     }
 
-    public getEmail(): string {
+    public getValue(): string {
         return this.email;
     }
+
 }

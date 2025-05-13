@@ -1,9 +1,9 @@
-import { RoleType } from '../../../../shared/RoleType';
+import { RoleType } from '@shared/RoleType';
 
 export default class Role {
     private readonly role: RoleType;
 
-    constructor(role: RoleType) {
+     constructor(role: RoleType) {
         this.role = this.validateRole(role);
     }
     private validateRole(role: RoleType): RoleType {
@@ -12,10 +12,19 @@ export default class Role {
         }
         return role;
     }
-    public getRole(): RoleType {
+
+    public static defaultUser(): Role {
+        return new Role(RoleType.USER);
+    }
+
+    public static adminUser(): Role {
+        return new Role(RoleType.USER);
+    }
+
+    public getValue(): RoleType {
         return this.role;
     }
-  
+
     public isAdmin(): boolean {
         return this.role === RoleType.ADMIN;
     }

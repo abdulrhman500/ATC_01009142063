@@ -1,4 +1,4 @@
-import UserNamingException from '../../../../shared/exceptions/UserNamingException';
+import UserNamingException from '@shared/exceptions/UserNamingException';
 
 export default class UserName {
 
@@ -24,19 +24,16 @@ export default class UserName {
         }
         return name;
     }
-    public getFirst(): string {
+    public getFirstName(): string {
         return this.first;
     }
-    public getMiddle(): string {
+    public getMiddleName(): string {
         return this.middle;
     }
-    public getLast(): string {
+    public getLastName(): string {
         return this.last;
     }
     public getFullName(): string {
         return `${this.first} ${this.middle} ${this.last}`;
-    }
-    public getInitials(): string {
-        return `${this.first.charAt(0)}${this.middle.charAt(0)}${this.last.charAt(0)}`;
     }
 }

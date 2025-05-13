@@ -3,7 +3,7 @@
 export class RegisterUserCommand {
     constructor(
         public readonly firstName: string,
-        public readonly middleName: string | undefined, // Match DTO can be undefined
+        public readonly middleName: string, // Match DTO can be undefined
         public readonly lastName: string,
         public readonly email: string,
         public readonly username: string,
