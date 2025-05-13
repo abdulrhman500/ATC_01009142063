@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  firstName  String
+  middleName String   @default("")
+  lastName   String
+  email      String   @unique
+  username   String   @unique
+  password   String
+  createdAt  DateTime @default(now())
+  role       Role
+  bookings   Booking[]
+}
+
+model Event {
+  id          Int               @id @default(autoincrement())
+  name        String
+  description String
+  date        DateTime
+  venue       Venue             @relation(fields: [venueId], references: [id])
+  venueId     Int
+  photoUrl    String
+  priceValue  Float
+  priceCurrency String
+  category    Category?         @relation(fields: [categoryId], references: [id])
+  categoryId  Int?
+  translations EventTranslation[]
+  bookings    Booking[]
+  tags        EventTag[]
+}
+
+model EventTranslation {
+  id           Int      @id @default(autoincrement())
+  event        Event    @relation(fields: [eventId], references: [id])
+  eventId      Int
+  languageCode String   // "en", "ar"
+  name         String
+  description  String
+
+  @@unique([eventId, languageCode])
+}
+
+model Venue {
+  id         Int     @id @default(autoincrement())
+  name       String
+  street     String
+  city       String
+  state      String
+  country    String
+  postalCode String?
+  placeUrl   String?
+  events     Event[]
+}
+
+model Booking {
+  id      Int   @id @default(autoincrement())
+  user    User  @relation(fields: [userId], references: [id])
+  userId  Int
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+
+  @@unique([userId, eventId])
+}
+
+model Category {
+  id               Int        @id @default(autoincrement())
+  name             String
+  parentCategory   Category?  @relation("CategoryToParent", fields: [parentCategoryId], references: [id])
+  parentCategoryId Int?
+  children         Category[] @relation("CategoryToParent")
+  events           Event[]
+}
+
+model Tag {
+  id    Int        @id @default(autoincrement())
+  name  String     @unique
+  events EventTag[]
+}
+
+model EventTag {
+  id      Int   @id @default(autoincrement())
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  tag     Tag   @relation(fields: [tagId], references: [id])
+  tagId   Int
+
+  @@unique([eventId, tagId])
+}
+
+enum Role {
+  admin
+  customer
+}

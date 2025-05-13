@@ -1,10 +1,10 @@
 
-import EventName from "@value-objects/events/EventName";
-import EventDescription from "@value-objects/events/EventDescription";
-import EventDate from "@value-objects/events/EventDate";
-import Venue from "@domain/models/value-objects/events/Venue";
-import EventPrice from "@value-objects/events/EventPrice";
-import EventPhotoUrl from "@value-objects/events/EventPhotoUrl";
+import EventName from "@domain/event/value-objects/EventName";
+import EventDescription from "@domain/event/value-objects/EventDescription";
+import EventDate from "@domain/event/value-objects/EventDate";
+import Venue from "@domain/event/value-objects/Venue";
+import EventPrice from "@domain/event/value-objects/EventPrice";
+import EventPhotoUrl from "@domain/event/value-objects/EventPhotoUrl";
 
 
 export default class Event {

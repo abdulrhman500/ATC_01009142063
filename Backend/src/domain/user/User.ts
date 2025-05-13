@@ -1,7 +1,7 @@
-import Name from "@value-objects/user/UserName";
-import Email from "@value-objects/user/UserEmail";
-import Username from "@value-objects/user/UserUsername";
-import UserId from "@value-objects/user/UserId";
+import Name from "@domain/user/value-objects/UserName";
+import Email from "@domain/user/value-objects/UserEmail";
+import Username from "@domain/user/value-objects/UserUsername";
+import UserId from "@domain/user/value-objects/UserId";
 
 export default class User {
     readonly id: UserId;
