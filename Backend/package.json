@@ -6,7 +6,9 @@
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
     "build": "tsc",
-    "start:prod": "node dist/src/bootstrap.js"
+    "start:prod": "node dist/src/bootstrap.js",
+    "test": "jest test/integration --forceExit --detectOpenHandles",
+    "test:watch": "jest test/integration --watch"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.5",

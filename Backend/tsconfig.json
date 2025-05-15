@@ -10,6 +10,7 @@
     "**/*.spec.ts"
   ],
   "compilerOptions": {
+    "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
@@ -23,7 +24,6 @@
     "@api/*": ["src/api/*"],
     "@application/*": ["src/application/*"],
     "@domain/*": ["src/domain/*"],
-    // "@models/*": ["src/domain/models/*"],
     "@value-objects/*": ["src/domain/models/value-objects/*"],
     "@shared/*": ["src/shared/*"],
     "@exceptions/*": ["src/shared/exceptions/*"],

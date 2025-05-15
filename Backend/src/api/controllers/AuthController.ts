@@ -4,14 +4,13 @@ import { inject } from "inversify";
 import { TYPES } from "@src/types";
 import { RegisterUserHandler } from "@application/user/use-cases/RegisterUserHandler";
 import { RegisterUserCommand } from "@application/user/commands/RegisterUserCommand";
-import { RegisterUserDtoRequest } from "@api/dtos/RegisterUserRequestDto";
+import { RegisterUserDtoRequest } from "@src/api/dtos/RegisterUser/RegisterUserRequestDto";
 import ResponseEntity from "@api/shared/ResponseEntity";
-import InternalServerErrorResponseEntity from "@api/shared/InternalServerErrorResponseEntity";
 import { StatusCodes } from "http-status-codes";
 import UserAlreadyExistException from "@domain/user/exceptions/UserAlreadyExistException";
 import { ValidationMiddleware } from "@api/middleware/ValidationMiddleware";
-
-
+import { mapToDto } from "@shared/utils/mapper.util";
+import { RegisterUserResponseDto } from "@src/api/dtos/RegisterUser/RegisterUserResponseDto";
 @controller("/auth")
 export default class AuthController implements interfaces.Controller {
     constructor(
@@ -21,7 +20,6 @@ export default class AuthController implements interfaces.Controller {
     @httpPost("/register", ValidationMiddleware(RegisterUserDtoRequest))
     async register(@request() req: Request, @response() res: Response) {
 
-        try {
             const command = new RegisterUserCommand(
                 req.body.firstName,
                 req.body.middleName,
@@ -33,22 +31,12 @@ export default class AuthController implements interfaces.Controller {
 
             const registeredUser = await this.registerUserUseCase.execute(command);
 
-            const responseEntity = new ResponseEntity(StatusCodes.CREATED, "Registration successful", {
-                id: registeredUser.getId()?.getValue(),
-                username: registeredUser.getUsername().getValue(),
-                email: registeredUser.getEmail().getValue(),
-            });
+            const responseBody = mapToDto(RegisterUserResponseDto, registeredUser);
+
+            const responseEntity = new ResponseEntity(StatusCodes.CREATED, "Registration successful", responseBody);
 
             return res.status(responseEntity.getStatus()).json(responseEntity);
 
-        } catch (error) {
-            if (error instanceof UserAlreadyExistException) {
-                const responseEntity = new ResponseEntity(StatusCodes.CONFLICT, error.message, {});
-                return res.status(responseEntity.getStatus()).json(responseEntity);
-            }
-
-            const responseEntity = new InternalServerErrorResponseEntity(error);
-            return res.status(responseEntity.getStatus()).json(responseEntity);
-        }
+        
     }
 }

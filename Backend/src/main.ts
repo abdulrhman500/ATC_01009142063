@@ -4,7 +4,7 @@ import express from 'express';
 import { InversifyExpressServer } from "inversify-express-utils";
 import {container} from "./inversify.config";
 import * as bodyParser from "body-parser";
-
+import errorHandlerMiddleware from "./api/middleware/ErrorHandler.middleware";
 // Import your controller files to ensure decorators are processed
 import "@controllers/AuthController";
 
@@ -26,13 +26,13 @@ server.setConfig((app) => {
 
 // Configure error handling middleware using setErrorConfig
 server.setErrorConfig((app) => {
-    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-        console.error(err.stack);
-        res.status(500).send("Something broke!");
-    });
+    app.use(errorHandlerMiddleware);
 });
 
 const app = server.build(); // Build the Express application
+
+// Export app for testing purposes
+export { app };
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);

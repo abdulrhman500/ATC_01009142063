@@ -1,7 +1,8 @@
 // jest.config.ts
 import { pathsToModuleNameMapper } from 'ts-jest';
 // Assuming tsconfig.json can be imported directly as JSON in your environment
-import { compilerOptions } from './tsconfig.json';
+import tsconfig from './tsconfig.json';
+const { compilerOptions } = tsconfig;
 
 import type { JestConfigWithTsJest } from 'ts-jest'; // Optional: for type safety
 
