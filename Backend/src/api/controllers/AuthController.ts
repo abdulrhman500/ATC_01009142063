@@ -1,7 +1,7 @@
 import { controller, httpPost, interfaces, request, response } from "inversify-express-utils";
 import { Request, Response, NextFunction } from "express";
 import { inject } from "inversify";
-import { TYPES } from "@src/types";
+import { TYPES } from "@src/config/types";
 import { RegisterUserHandler } from "@application/user/use-cases/RegisterUserHandler";
 import { RegisterUserCommand } from "@application/user/commands/RegisterUserCommand";
 import { RegisterUserDtoRequest } from "@src/api/dtos/RegisterUser/RegisterUserRequestDto";

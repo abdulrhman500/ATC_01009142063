@@ -1,6 +1,6 @@
 // src/application/category/use-cases/GetCategoryTreeHandler.ts
 import { inject, injectable } from "inversify";
-import { TYPES } from "@src/types";
+import { TYPES } from "@src/config/types";
 import ICategoryRepository from "@domain/category/interfaces/ICategoryRepository";
 import Category from "@domain/category/Category";
 // Import your DTOs
@@ -18,7 +18,7 @@ export default class GetCategoryTreeHandler {
 
     // Ensure the return type is Promise<GetCategoryTreeResponseDto>
     public async execute(): Promise<GetCategoryTreeResponseDto> {
-        const allCategories: Category[] = await this.categoryRepository.findAll();
+        const allCategories: Category[] = await this.categoryRepository.fetchAll();
         
         // Assuming this.buildTree correctly returns CategoryTreeNodeDto[]
         // where each node is structured as expected (id, name, parentId, children)

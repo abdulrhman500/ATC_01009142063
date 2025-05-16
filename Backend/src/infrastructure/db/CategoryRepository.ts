@@ -1,6 +1,6 @@
 import { PrismaClient, Category as PrismaCategoryModel } from '@prisma/client';
 import { inject, injectable } from 'inversify';
-import { TYPES } from '@src/types';
+import { TYPES } from '@src/config/types';
 import Category from "@domain/category/Category";
 import CategoryName from "@domain/category/value-objects/CategoryName";
 import ICategoryRepository, { PaginatedCategoriesResult } from "@src/domain/category/interfaces/ICategoryRepository"; // Ensure this path is correct for your project
@@ -31,7 +31,12 @@ export default class CategoryRepository implements ICategoryRepository {
         };
         return data;
     }
-
+    public async fetchAll(): Promise<Category[]> {
+        const prismaCategories = await this.prisma.category.findMany({
+            // orderBy: { name: 'asc' }
+        });
+        return prismaCategories.map(pc => this.mapToDomain(pc));
+    }
     public async findAll(options: {
         page: number;
         limit: number;

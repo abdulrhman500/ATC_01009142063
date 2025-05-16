@@ -7,7 +7,7 @@ import Email from '@domain/user/value-objects/UserEmail';
 import Username from '@domain/user/value-objects/UserUsername';
 import UserRole from '@domain/user/value-objects/UserRole';
 import { IUserRepository } from '@domain/user/interfaces/IUserRepository';
-import { TYPES } from '@src/types';
+import { TYPES } from '@src/config/types';
 import UserName from '@src/domain/user/value-objects/UserName';
 
 @injectable()

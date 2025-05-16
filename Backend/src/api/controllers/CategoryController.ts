@@ -1,7 +1,7 @@
 import { controller, httpDelete, httpGet, httpPatch, httpPost, interfaces, request, response } from "inversify-express-utils";
 import { Request, Response } from "express";
 import { inject } from "inversify";
-import { TYPES } from "@src/types";
+import { TYPES } from "@src/config/types";
 import ResponseEntity from "@api/shared/ResponseEntity";
 import { StatusCodes } from "http-status-codes";
 import { ValidationMiddleware } from "@api/middleware/ValidationMiddleware";

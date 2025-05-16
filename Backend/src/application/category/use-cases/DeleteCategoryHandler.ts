@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { TYPES } from "@src/types";
+import { TYPES } from "@src/config/types";
 import ICategoryRepository from "@domain/category/interfaces/ICategoryRepository";
 import DeleteCategoryCommand from "../commands/DeleteCategoryCommand";
 import Category from "@domain/category/Category";

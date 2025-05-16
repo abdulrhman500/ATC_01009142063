@@ -28,7 +28,8 @@
     "@shared/*": ["src/shared/*"],
     "@exceptions/*": ["src/shared/exceptions/*"],
     "@infrastructure/*": ["src/infrastructure/*"],
-    "@controllers/*": ["src/api/controllers/*"]
+    "@controllers/*": ["src/api/controllers/*"],
+    "@config/*": ["src/config/*"],
   }
 
   }

@@ -3,7 +3,7 @@ import Category from "@domain/category/Category";
 import ICategoryRepository from "@domain/category/interfaces/ICategoryRepository";
 import CategoryName from "@domain/category/value-objects/CategoryName";
 import { inject, injectable } from "inversify";
-import { TYPES } from "@src/types";
+import { TYPES } from "@src/config/types";
 
 @injectable()
 export default class CreateCategoryHandler {

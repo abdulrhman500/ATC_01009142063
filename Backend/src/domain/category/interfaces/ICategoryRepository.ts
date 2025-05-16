@@ -18,4 +18,5 @@ export default interface ICategoryRepository {
     findByParentName(parentName: string): Promise<Category[]>;
     save(category: Category): Promise<Category>;
     deleteById(id: number): Promise<boolean>;
+    fetchAll(): Promise<Category[]>; // <-- ADD THIS LINE
 }

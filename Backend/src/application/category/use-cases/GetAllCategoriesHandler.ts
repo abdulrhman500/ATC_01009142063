@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { TYPES } from "@src/types";
+import { TYPES } from "@src/config/types";
 import ICategoryRepository, { PaginatedCategoriesResult } from "@domain/category/interfaces/ICategoryRepository";
 import GetAllCategoriesQuery from "@application/category/queries/GetAllCategoriesQuery";
 

@@ -1,39 +1,28 @@
-import "reflect-metadata"; // Keep this at the very top
+import "reflect-metadata";
 import 'module-alias/register';
-import express from 'express';
-import { InversifyExpressServer } from "inversify-express-utils";
-import {container} from "./inversify.config";
-import * as bodyParser from "body-parser";
-import errorHandlerMiddleware from "./api/middleware/ErrorHandler.middleware";
-// Import your controller files to ensure decorators are processed
-import "@controllers/AuthController";
-
-const port = 3000; // Or your desired port
+import dotenv from 'dotenv';
+dotenv.config();
+import http from 'http'; 
+import { container } from "@config/inversify.config";
+import { configureApplication } from '@src/server.setup';
+import { setupGracefulShutdown } from '@config/gracefulShutdown';
 
 
+const PORT = process.env.PORT || '3000';
+const API_ROOT_PATH = process.env.API_ROOT_PATH || '/api/v1';
+const HOST = process.env.HOST || 'localhost';
 
-const server = new InversifyExpressServer(container); // Pass the container instance
+const app = configureApplication(container, API_ROOT_PATH);
 
-// Configure middleware using setConfig
-server.setConfig((app) => {
-    app.use(bodyParser.json()); // Middleware to parse JSON request bodies
-    app.use(bodyParser.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
-
-    // Add any other global middleware here
-    // app.use(cors());
-    // app.use(helmet());
-});
-
-// Configure error handling middleware using setErrorConfig
-server.setErrorConfig((app) => {
-    app.use(errorHandlerMiddleware);
-});
-
-const app = server.build(); // Build the Express application
-
-// Export app for testing purposes
+// exporting app for testing purposes 
 export { app };
 
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+const httpServer: http.Server = app.listen(Number(PORT), HOST, () => {
+    console.log(`🚀 Server running on http://${HOST}:${PORT}`);
+    if (API_ROOT_PATH && API_ROOT_PATH !== '/') {
+        console.log(`   API version root available at http://${HOST}:${PORT}${API_ROOT_PATH}`);
+    }
+    console.log(`📚 Swagger API docs available at http://${HOST}:${PORT}/api-docs`);
 });
+
+setupGracefulShutdown(httpServer);

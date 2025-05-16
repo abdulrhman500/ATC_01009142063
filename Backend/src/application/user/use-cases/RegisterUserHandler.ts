@@ -7,7 +7,7 @@ import Email from "@domain/user/value-objects/UserEmail";
 import Username from "@domain/user/value-objects/UserUsername";
 import UserRole from "@domain/user/value-objects/UserRole";
 import { inject, injectable } from "inversify";
-import { TYPES } from "@src/types";
+import { TYPES } from "@src/config/types";
 
 @injectable()
 export class RegisterUserHandler {
