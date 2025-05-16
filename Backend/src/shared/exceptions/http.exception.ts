@@ -1,5 +1,5 @@
 import { ValidationError } from 'class-validator';
-
+import { StatusCodes } from 'http-status-codes';
 export class HttpException extends Error {
   public statusCode: number;
   public message: string;
@@ -24,3 +24,18 @@ export class ConflictException extends HttpException {
     super(409, message);
   }
 }
+
+export class NotFoundException extends HttpException {
+  constructor(message: string) {
+    super(404, message);
+  }
+
+}
+export class BadRequestException extends HttpException{
+  constructor(message: string) {
+    super(400, message);
+  }
+}
+
+
+

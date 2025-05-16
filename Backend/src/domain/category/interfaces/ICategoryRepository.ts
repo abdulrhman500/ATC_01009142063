@@ -1,9 +1,21 @@
 import Category from "@domain/category/Category";
-
+export interface PaginatedCategoriesResult {
+    categories: Category[];
+    totalItems: number;
+    currentPage: number;
+    itemsPerPage: number;
+    totalPages: number;
+}
 export default interface ICategoryRepository {
-
-    getCategoryById(id: number): Promise<Category| null | undefined>;
-    getCategoryByName(name: string): Promise<Category| Category | null |undefined>;
-    getCategoryByParentId(parentId: number): Promise<Category[]| Category | null |undefined>;
-    getCategoryByParentName(parentName: string): Promise<Category[]| Category | null |undefined>;
+    findAll(options: {
+        page: number;
+        limit: number;
+    }): Promise<PaginatedCategoriesResult>;
+    
+    findById(id: number): Promise<Category | null>;
+    findByName(name: string): Promise<Category | null>;
+    findByParentId(parentId: number | null): Promise<Category[]>;
+    findByParentName(parentName: string): Promise<Category[]>;
+    save(category: Category): Promise<Category>;
+    deleteById(id: number): Promise<boolean>;
 }

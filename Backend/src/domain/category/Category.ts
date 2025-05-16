@@ -1,18 +1,18 @@
 import CategoryName from "@domain/category/value-objects/CategoryName"
 
 export default class Category {
-    id: number
-    name: CategoryName
-    parentId: number
+    public readonly id: number | null
+    public readonly name: CategoryName
+    public readonly parentId: number | null
 
-    constructor(id: number, name: CategoryName, parentId: number) {
+    constructor(id: number|null, name: CategoryName, parentId: number|null) {
         this.id = id;
         this.name = name;
         this.parentId = parentId;
     }
-    
-    //getters
-    public getId(): number {
+
+  
+    public getId(): number|null {
         return this.id;
     }
 
@@ -20,8 +20,9 @@ export default class Category {
         return this.name;
     }
 
-    public getParentId(): number {
+    public getParentId(): number|null {
         return this.parentId;
     }
+    
 
 }

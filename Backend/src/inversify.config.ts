@@ -7,6 +7,9 @@ import { RegisterUserHandler } from "@src/application/user/use-cases/RegisterUse
 import { PrismaClient } from "@prisma/client";
 import {Argon2PasswordHasher} from "@infrastructure/Argon2PasswordHasher";
 import IPasswordHasher from "./domain/user/interfaces/IPasswordHasher";
+import CategoryRepository from "@infrastructure/db/CategoryRepository";
+import ICategoryRepository from "@domain/category/interfaces/ICategoryRepository";
+
 import { TYPES } from "./types";
 
 const container = new Container();
@@ -15,7 +18,7 @@ container.bind<PrismaClient>(TYPES.PrismaClient).toConstantValue(new PrismaClien
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 container.bind<RegisterUserHandler>(TYPES.RegisterUserHandler).to(RegisterUserHandler);
 container.bind<IPasswordHasher>(TYPES.IPasswordHasher).to(Argon2PasswordHasher);
-
+container.bind<ICategoryRepository>(TYPES.ICategoryRepository).to(CategoryRepository);
 export {
     container,
     TYPES
