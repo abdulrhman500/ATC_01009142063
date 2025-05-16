@@ -8,9 +8,21 @@
     "build": "tsc",
     "start:prod": "node dist/src/bootstrap.js",
     "test": "jest test/integration --forceExit --detectOpenHandles",
-    "test:watch": "jest test/integration --watch"
+    "test:watch": "jest test/integration --watch",
+
+    "compose:up": "docker compose up --build -d",
+    
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:db:push": "prisma db push", 
+
+    "dev:migrate": "npm run prisma:migrate:dev && npm run dev",
+    "start:migrate": "npm run prisma:migrate:dev && npm run start",
+    "build:and:start:prod:migrate": "npm run build && npm run prisma:migrate:deploy && npm run start:prod"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^10.26.0",
     "@tsconfig/node20": "^20.1.5",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
@@ -24,6 +36,7 @@
     "prisma": "^6.7.0",
     "reflect-metadata": "^0.2.2",
     "supertest": "^7.1.1",
+    "testcontainers": "^10.26.0",
     "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

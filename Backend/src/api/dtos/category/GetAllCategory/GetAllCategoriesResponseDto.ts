@@ -1,24 +1,23 @@
-import { Expose, Type } from 'class-transformer';
+// src/api/dtos/category/GetAllCategory/GetAllCategoriesResponseDto.ts
+import { Expose } from 'class-transformer';
 import CategorySummaryResponseDto from '@api/dtos/category/CategorySummaryResponseDto';
-
-
-
-export default class GetAllCategoriesResponseDto {
+import { PaginatedCategoriesResult } from '@domain/category/interfaces/ICategoryRepository';
+import MappableResponseDto from '@api/shared/MappableResponseDto';
+export default class GetAllCategoriesResponseDto extends MappableResponseDto {
     @Expose()
-    @Type(() => CategorySummaryResponseDto)
-    data: CategorySummaryResponseDto  []; // The actual items for the current page
+    data: CategorySummaryResponseDto[];
 
     @Expose()
-    totalItems: number; // Total number of items across all pages
+    totalItems: number;
 
     @Expose()
-    currentPage: number; // The current page number
+    currentPage: number;
 
     @Expose()
-    itemsPerPage: number; // The number of items requested per page (limit)
+    itemsPerPage: number;
 
     @Expose()
-    totalPages: number; // Total number of pages available
+    totalPages: number;
 
     constructor(
         data: CategorySummaryResponseDto[],
@@ -27,10 +26,25 @@ export default class GetAllCategoriesResponseDto {
         itemsPerPage: number,
         totalPages: number
     ) {
+        super();
         this.data = data;
         this.totalItems = totalItems;
         this.currentPage = currentPage;
         this.itemsPerPage = itemsPerPage;
         this.totalPages = totalPages;
+    }
+
+    public static toDtoFrom(paginatedResult: PaginatedCategoriesResult): GetAllCategoriesResponseDto {
+        const categorySummaryDtos = paginatedResult.categories.map(category =>
+            CategorySummaryResponseDto.toDtoFrom(category) // Using the new method name here
+        );
+
+        return new GetAllCategoriesResponseDto(
+            categorySummaryDtos,
+            paginatedResult.totalItems,
+            paginatedResult.currentPage,
+            paginatedResult.itemsPerPage,
+            paginatedResult.totalPages
+        );
     }
 }

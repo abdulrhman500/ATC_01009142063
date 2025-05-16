@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x]
 }
 
 datasource db {
@@ -74,7 +75,7 @@ model Booking {
 
 model Category {
   id               Int        @id @default(autoincrement())
-  name             String     // Note: Not unique by default. "General" category would be one instance.
+  name             String     @unique // Note: Not unique by default. "General" category would be one instance.
   parentCategory   Category?  @relation("CategoryToParent", fields: [parentCategoryId], references: [id], onDelete: Restrict) // MODIFIED: onDelete: Restrict
                                                                                                                            // Application Note: Before deleting a parent Category,
                                                                                                                            // reassign child Categories (or set parentId to null) via application logic.

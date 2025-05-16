@@ -1,36 +1,60 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
+  
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts",
-    "src/bootstrap.ts" 
-, "src/inversify.config.ts"  ],
+      "src/**/*.ts",
+      "test/**/*.ts",
+      "src/bootstrap.ts",
+      "src/inversify.config.ts"
+  ],
   "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
+      "node_modules",
+      "**/*.spec.ts"
   ],
   "compilerOptions": {
-    "resolveJsonModule": true,
-    "outDir": "./dist",
-    "rootDir": "./",
-    "strict": true,
-    "allowJs": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "baseUrl": "./",
-    "paths": {
-    "@src/*": ["src/*"],
-    "@test/*": ["test/*"],
-    "@api/*": ["src/api/*"],
-    "@application/*": ["src/application/*"],
-    "@domain/*": ["src/domain/*"],
-    "@value-objects/*": ["src/domain/models/value-objects/*"],
-    "@shared/*": ["src/shared/*"],
-    "@exceptions/*": ["src/shared/exceptions/*"],
-    "@infrastructure/*": ["src/infrastructure/*"],
-    "@controllers/*": ["src/api/controllers/*"],
-    "@config/*": ["src/config/*"],
-  }
-
+    
+      "resolveJsonModule": true,
+      "outDir": "./dist",
+      "rootDir": "./",
+      "strict": true,
+      "allowJs": false,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "baseUrl": "./",
+      "paths": {
+          "@src/*": [
+              "src/*"
+          ],
+          "@test/*": [
+              "test/*"
+          ],
+          "@api/*": [
+              "src/api/*"
+          ],
+          "@application/*": [
+              "src/application/*"
+          ],
+          "@domain/*": [
+              "src/domain/*"
+          ],
+          "@value-objects/*": [
+              "src/domain/models/value-objects/*"
+          ],
+          "@shared/*": [
+              "src/shared/*"
+          ],
+          "@exceptions/*": [
+              "src/shared/exceptions/*"
+          ],
+          "@infrastructure/*": [
+              "src/infrastructure/*"
+          ],
+          "@controllers/*": [
+              "src/api/controllers/*"
+          ],
+          "@config/*": [
+              "src/config/*"
+          ]
+      }
   }
 }

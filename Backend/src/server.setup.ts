@@ -1,8 +1,8 @@
 import express, { Application } from 'express';
 import { InversifyExpressServer } from 'inversify-express-utils';
 import { Container } from 'inversify'; 
-import swaggerUi from 'swagger-ui-express';
-import swaggerSpec from './config/swagger.config';
+// import swaggerUi from 'swagger-ui-express';
+// import swaggerSpec from './config/swagger.config';
 import errorHandlerMiddleware from './api/middleware/ErrorHandler.middleware';
 import morgan from 'morgan'; 
 // IMPORTANT: Import all your controllers here so InversifyJS can discover them.
@@ -18,7 +18,7 @@ export function configureApplication(container: Container, rootPath: string): Ap
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
 
-        app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+        // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
         // app.use(cors());
         // app.use(helmet());

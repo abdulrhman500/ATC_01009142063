@@ -29,7 +29,7 @@ async function performShutdown(
             console.error('❌ Error during HTTP server close:', err);
             // Even with an error here, we should proceed to close other resources
         } else {
-            console.log('✅ HTTP server closed successfully.');
+            console.log('💤 HTTP server closed successfully.');
         }
 
         // 2. Close database connections

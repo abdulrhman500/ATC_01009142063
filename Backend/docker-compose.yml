@@ -4,13 +4,43 @@ services:
     container_name: postgres-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: eventora
+      POSTGRES_USER: postgres         # Your PostgreSQL username
+      POSTGRES_PASSWORD: postgres     # Your PostgreSQL password
+      POSTGRES_DB: eventora           # Your database name
     ports:
-      - "5432:5432"
+      - "5432:5432"                   # Map host port 5432 to container port 5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data # Persist PostgreSQL data
+    healthcheck:
+      # Checks if PostgreSQL is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eventora"]
+      interval: 10s  # How often to run the check
+      timeout: 5s    # How long to wait for a response
+      retries: 5     # How many times to retry before marking as unhealthy
+      start_period: 10s # Optional: Grace period for the service to start before checks begin
+
+  app:
+    build:
+      context: .                # Use the current directory as the build context for the Dockerfile
+      dockerfile: Dockerfile    # Specify the name of your Dockerfile (if not 'Dockerfile')
+    container_name: eventora-app # A name for your application container
+    restart: unless-stopped
+    ports:
+      - "3000:3000"             # Map port 3000 on your host to port 3000 in the container
+                                # Change the left side (e.g., "8080:3000") if port 3000 is busy on your host
+    environment:
+      NODE_ENV: production
+      # This URL tells Prisma (and your app) how to connect to the 'postgres' service
+      # The hostname 'postgres' is the service name of your PostgreSQL container.
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/eventora?schema=public"
+      PORT: 3000                # The port your Node.js application listens on *inside* the container
+      # --- Add any other environment variables your application needs below ---
+      # EXAMPLE_JWT_SECRET: "your_production_jwt_secret_here"
+      # EXAMPLE_API_KEY: "your_production_api_key_here"
+      # EXAMPLE_CORS_ORIGIN: "https://yourfrontend.com"
+    depends_on:
+      postgres:                 # Tells Docker Compose to start the 'postgres' service before this 'app' service
+        condition: service_healthy # Waits for the 'postgres' service's healthcheck to pass before starting 'app'
 
 volumes:
   postgres_data:

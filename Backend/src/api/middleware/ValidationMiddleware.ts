@@ -41,6 +41,9 @@ export function ValidationMiddleware<T extends object>(
         // Convert plain object to class instance.
         // This is crucial for decorators to work, and for @Type to convert query param strings.
         const instance = plainToInstance(dtoType, dataToValidate, {});
+        console.log("--------------------------------------");
+        console.log("instance: ", instance);
+        console.log("--------------------------------------");   
         
         try {
             const errors = await validate(instance, validationOptions);

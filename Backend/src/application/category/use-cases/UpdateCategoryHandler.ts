@@ -16,6 +16,7 @@ export default class UpdateCategoryHandler {
         const category = await this.categoryRepository.findById(command.id);
 
         if (!category) {
+
             throw new NotFoundException(`Category with ID ${command.id} not found.`);
         }
 
@@ -35,6 +36,7 @@ export default class UpdateCategoryHandler {
         if (command.parentId !== undefined) { 
                                               
             if (command.parentId === category.getId()) {
+
                 throw new ConflictException("A category cannot be its own parent.");
             }
             // Add more complex cycle detection here if necessary (e.g., via a domain service)

@@ -16,7 +16,7 @@ const app = configureApplication(container, API_ROOT_PATH);
 
 // exporting app for testing purposes 
 export { app };
-
+if (require.main === module) {
 const httpServer: http.Server = app.listen(Number(PORT), HOST, () => {
     console.log(`🚀 Server running on http://${HOST}:${PORT}`);
     if (API_ROOT_PATH && API_ROOT_PATH !== '/') {
@@ -26,3 +26,4 @@ const httpServer: http.Server = app.listen(Number(PORT), HOST, () => {
 });
 
 setupGracefulShutdown(httpServer);
+}

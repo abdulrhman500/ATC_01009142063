@@ -10,11 +10,13 @@ export default class CreateCategoryRequestDto {
     @Transform(({ value }: { value: string }) => value.trim())
     public name: string;
 
-    @IsNotEmpty({ message: "Parent category  is required" })
-    public parentId: number;
+    // @IsNotEmpty({ message: "Parent category  is required" })
+    @IsOptional()
+    public parentCategoryId: number|null;
+
     constructor(name: string, parentId: number) {
         this.name = name;
-        this.parentId = parentId;
+        this.parentCategoryId = parentId;
     }
 
 

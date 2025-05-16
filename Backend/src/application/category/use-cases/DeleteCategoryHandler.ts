@@ -29,6 +29,8 @@ export default class DeleteCategoryHandler {
         }
 
         if (categoryToDelete.getName().getValue() === Constants.GENERAL_CATEGORY_NAME) {
+console.log("***********************1*********");
+
             throw new BadRequestException(`The "${Constants.GENERAL_CATEGORY_NAME}" category cannot be deleted.`);
         }
 

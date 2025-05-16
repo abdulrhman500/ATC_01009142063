@@ -12,5 +12,5 @@ export default class UpdateCategoryRequestDto {
     @IsOptional()
     @ValidateIf((_object, value) => value !== null) // Validates IsNumber only if value is not null
     @IsNumber({}, { message: 'Parent ID must be a number if provided and not null' })
-    parentId?: number | null;
+    parentCategoryId?: number | null;
 }

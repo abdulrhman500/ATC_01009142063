@@ -1,15 +1,26 @@
-import { Expose, Transform, Type } from 'class-transformer';
-import Category from '@src/domain/category/Category';
-export  default class CategorySummaryResponseDto {
+// src/api/dtos/category/CategorySummaryResponseDto.ts
+import { Expose } from 'class-transformer';
+import Category from '@domain/category/Category';
+import MappableResponseDto from '@api/shared/MappableResponseDto';
+export default class CategorySummaryResponseDto extends MappableResponseDto{
     @Expose()
-    @Transform(({ obj }: { obj: Category }) => obj.getId() !== null ? String(obj.getId()) : null)
-    id!: string | null; // Or string if ID is guaranteed non-null
+    id!: string | null;
 
     @Expose()
-    @Transform(({ obj }: { obj: Category }) => obj.getName().getValue())
     name!: string;
 
     @Expose()
-    @Transform(({ obj }: { obj: Category }) => obj.getParentId() !== null ? String(obj.getParentId()) : null)
-    parentId!: string | null;
+    parentId!: string | null; // Example
+
+     constructor() {super()}
+
+    public static toDtoFrom(category: Category): CategorySummaryResponseDto {
+        const dto = new CategorySummaryResponseDto();
+        const domainId = category.getId();
+        dto.id = domainId !== null ? String(domainId) : null;
+        dto.name = category.getName().getValue();
+        const domainParentId = category.getParentId();
+        dto.parentId = domainParentId !== null ? String(domainParentId) : null;
+        return dto;
+    }
 }
