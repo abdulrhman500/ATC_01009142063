@@ -26,6 +26,11 @@ export default class LoginUserHandler {
     public async execute(command: LoginUserCommand): Promise<LoginResult> {
         const { identifier, password } = command;
 
+        console.log("Identifier:", identifier);
+        console.log("Password:", password  );
+        
+        console.log("mvcccccccccccccccccccccc");
+        
         let user: User | null = null;
 
         // Try finding user by email first, then by username if it looks like an email
@@ -53,6 +58,7 @@ export default class LoginUserHandler {
 
         if (!isPasswordValid) {
             throw new UnauthorizedException("Invalid credentials.");
+            
         }
 
         // User is authenticated, generate JWT

@@ -14,7 +14,6 @@ import LoginUserHandler, { LoginResult } from "@src/application/user/use-cases/L
 import { LoginUserCommand } from "@src/application/user/commands/LoginUserCommand";
 import LoginRequestDto from "@api/dtos/auth/login/LoginRequestDto";
 import LoginResponseDto from "@src/api/dtos/auth/login/LoginResponseDto";
-import loginUserHandler from "@src/application/user/use-cases/LoginUserHandler";
 @controller("/auth")
 export default class AuthController implements interfaces.Controller {
     constructor(
@@ -78,6 +77,11 @@ export default class AuthController implements interfaces.Controller {
             StatusCodes.CREATED,
             "User registered successfully.",
             plainResponseBody);
+            console.log(plainResponseBody);
+            console.log("ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            console.log(responseEntity);
+            
+            
 
         return res.status(responseEntity.getStatus()).json(responseEntity.toJSON());
 

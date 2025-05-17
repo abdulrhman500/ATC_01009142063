@@ -7,6 +7,9 @@ export default class RegisterUserRequestDto {
     @IsString()
     @MinLength(2, { message: 'First name must be at least 2 characters long.' })
     @MaxLength(50, { message: 'First name cannot be longer than 50 characters.' })
+    @Matches(/^[a-zA-ZÀ-ÿ]+(?:[ '-][a-zA-ZÀ-ÿ]+)*$/u, { // Using the same regex as VO
+        message: 'First name contains invalid characters or formatting. Only letters, and single internal spaces, hyphens, or apostrophes are allowed.'
+    })
     firstName!: string;
 
     @Expose()
@@ -14,6 +17,9 @@ export default class RegisterUserRequestDto {
     @IsString()
     @MinLength(2, { message: 'Last name must be at least 2 characters long.' })
     @MaxLength(50, { message: 'Last name cannot be longer than 50 characters.' })
+    @Matches(/^[a-zA-ZÀ-ÿ]+(?:[ '-][a-zA-ZÀ-ÿ]+)*$/u, { // Using the same regex as VO
+        message: 'First name contains invalid characters or formatting. Only letters, and single internal spaces, hyphens, or apostrophes are allowed.'
+    })
     middleName!: string;
     
     @Expose()
@@ -21,6 +27,9 @@ export default class RegisterUserRequestDto {
     @IsString()
     @MinLength(2, { message: 'Last name must be at least 2 characters long.' })
     @MaxLength(50, { message: 'Last name cannot be longer than 50 characters.' })
+    @Matches(/^[a-zA-ZÀ-ÿ]+(?:[ '-][a-zA-ZÀ-ÿ]+)*$/u, { // Using the same regex as VO
+        message: 'First name contains invalid characters or formatting. Only letters, and single internal spaces, hyphens, or apostrophes are allowed.'
+    })
     lastName!: string;
 
 

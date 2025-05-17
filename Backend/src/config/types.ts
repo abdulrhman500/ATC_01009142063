@@ -31,4 +31,7 @@ export const TYPES = {
     GetAllVenuesHandler: Symbol.for("GetAllVenuesHandler"),
     CreateVenueHandler: Symbol.for("CreateVenueHandler")
 
+     ,
+     CreateBookingHandler: Symbol.for("CreateBookingHandler"),   
+
 };

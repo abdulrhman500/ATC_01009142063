@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import api from './api'; // Your configured Axios instance
 
 export interface EventSummary {
@@ -90,16 +91,50 @@ const eventService = {
     throw new Error("Not implemented");
   },
 
-  updateEvent: async (id: number, eventData: Partial<any>): Promise<EventSummary> => {
-    // TODO: Implement API call to PUT/PATCH /events/:id (Admin only)
-    console.warn(`updateEvent(${id}) is using mock implementation.`);
-    throw new Error("Not implemented");
+
+  updateEvent: async (
+    id: string,
+    eventData: {
+      name: string;
+      description: string;
+      date: string;
+      venueId: string;
+      categoryId?: string | null;
+      priceValue?: number;
+      priceCurrency?: string;
+      photoUrl?: string | null;
+    }
+  ): Promise<EventSummary> => {
+    try {
+      // Convert date to ISO string and prepare payload
+      const payload = {
+        ...eventData,
+        date: new Date(eventData.date).toISOString(),
+        categoryId: eventData.categoryId || null, // Ensure null instead of undefined
+        photoUrl: eventData.photoUrl || null      // Ensure null instead of undefined
+      };
+
+      const response = await api.put<ApiResponseEntity<BackendEventDto>>(
+        `${EVENTS_API_PATH}/${id}`,
+        payload
+      );
+
+      return mapBackendEventToSummary(response.data.payload);
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiResponseEntity<null>>;
+      console.error(`Failed to update event ${id}:`, axiosError.response?.data?.message || axiosError.message);
+      throw new Error(axiosError.response?.data?.message || 'Failed to update event');
+    }
   },
 
-  deleteEvent: async (id: number): Promise<void> => {
-    // TODO: Implement API call to DELETE /events/:id (Admin only)
-    console.warn(`deleteEvent(${id}) is using mock implementation.`);
-    throw new Error("Not implemented");
+  deleteEvent: async (id: string): Promise<void> => {
+    try {
+      await api.delete(`${EVENTS_API_PATH}/${id}`);
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiResponseEntity<null>>;
+      console.error(`Failed to delete event ${id}:`, axiosError.response?.data?.message || axiosError.message);
+      throw new Error(axiosError.response?.data?.message || 'Failed to delete event');
+    }
   },
 
   bookEvent: async (eventId: number): Promise<void> => {
@@ -117,3 +152,20 @@ export default eventService;
 
 // Export the EventSummary type for use in components
 export type { EventSummary as FrontendEvent };
+
+function mapBackendEventToSummary(backendEvent: BackendEventDto): EventSummary | PromiseLike<EventSummary> {
+
+  return {
+    id: backendEvent.id,
+    name: backendEvent.name,
+    descriptionShort: backendEvent.description.substring(0, 100), // Truncate description
+    date: backendEvent.date,
+    venueName: backendEvent.venue.name,
+    price: backendEvent.priceValue
+      ? `${backendEvent.priceValue.toFixed(2)} ${backendEvent.priceCurrency || 'USD'}`
+      : 'FREE',
+    photoUrl: backendEvent.photoUrl || '/placeholder-event.jpg',
+    categoryName: backendEvent.category?.name,
+    isBooked: backendEvent.isBooked
+  }
+}

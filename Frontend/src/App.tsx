@@ -5,7 +5,7 @@ import { useTheme } from './contexts/ThemeContext';
 import { useLanguage } from './contexts/LanguageContext';
 // useAuth might not be directly needed in App.tsx if ProtectedRoute handles all auth logic
 // import { useAuth } from './contexts/AuthContext';
-
+import AdminSystemManagementPage from './pages/admin/AdminSystemManagementPage';
 // Layout components
 import AdminLayout from './layouts/AdminLayout';
 import CustomerLayout from './layouts/CustomerLayout';
@@ -27,7 +27,7 @@ import BookingConfirmationPage from './pages/customer/BookingConfirmationPage';
 import CustomerDashboardPage from './pages/customer/CustomerDashboardPage';
 
 // Admin pages
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminDashboardPage from './pages/admin/AdminSystemManagementPage';
 // import EventManagementPage from './pages/admin/EventManagementPage';
 // import CategoryManagementPage from './pages/admin/CategoryManagementPage';
 
@@ -64,6 +64,8 @@ function App() {
               >
                   <Route index element={<Navigate to="dashboard" replace />} />
                   <Route path="dashboard" element={<AdminDashboardPage />} />
+                  <Route path="manage" element={<AdminSystemManagementPage />} />
+
                   {/* <Route path="events" element={<EventManagementPage />} /> */}
                   {/* <Route path="categories" element={<CategoryManagementPage />} /> */}
                   <Route path="settings" element={<SettingsPage />} />

@@ -4,6 +4,7 @@ import { StatusCodes, ReasonPhrases } from 'http-status-codes';
 import ResponseEntity from '@api/shared/ResponseEntity';
 import UserAlreadyExistException from '@domain/user/exceptions/UserAlreadyExistException';
 import { HttpException, NotFoundException } from '@shared/exceptions/http.exception'; // Assuming NotFoundException is defined here or similar
+import UserNamingException from '@src/shared/exceptions/UserNamingException';
 
 const errorHandlerMiddleware = (err: any, req: Request, res: Response, next: NextFunction): void => {
     console.error("Caught exception:", err.message); // Log the message for clarity
@@ -21,7 +22,11 @@ const errorHandlerMiddleware = (err: any, req: Request, res: Response, next: Nex
     }
     else if (err instanceof HttpException) {
         res.status(err.statusCode).json(err);
-
+        return;
+    }else if(err instanceof UserNamingException){
+        const responseEntity = new ResponseEntity(StatusCodes.BAD_REQUEST, err.message, null); 
+        res.status(responseEntity.getStatus()).json(responseEntity);
+        return;
     }
     // Add other 'else if' blocks here for other specific custom exceptions you want to handle
     // else if (err instanceof YourCustomBadRequestException) {

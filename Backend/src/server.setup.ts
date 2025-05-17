@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import { InversifyExpressServer } from 'inversify-express-utils';
 import { Container } from 'inversify';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 // import swaggerUi from 'swagger-ui-express';
 // import swaggerSpec from './config/swagger.config';
 import errorHandlerMiddleware from './api/middleware/ErrorHandler.middleware';
@@ -17,6 +18,9 @@ export function configureApplication(container: Container, rootPath: string): Ap
 
     // Configure application-level middleware
     server.setConfig((app) => {
+        // Enable CORS for all routes and origins
+        app.use(cors());
+
         app.use(morgan('dev'));
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
