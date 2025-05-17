@@ -28,8 +28,8 @@ import CustomerDashboardPage from './pages/customer/CustomerDashboardPage';
 
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import EventManagementPage from './pages/admin/EventManagementPage';
-import CategoryManagementPage from './pages/admin/CategoryManagementPage';
+// import EventManagementPage from './pages/admin/EventManagementPage';
+// import CategoryManagementPage from './pages/admin/CategoryManagementPage';
 
 // Protected route component
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -38,7 +38,7 @@ function App() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { language, isRTL } = useLanguage();
-  const { isAuthenticated, isAdmin, isCustomer } = useAuth();
+  // const { isAuthenticated, isAdmin, isCustomer } = useAuth();
 
   // Update document title based on language
   React.useEffect(() => {
@@ -67,8 +67,8 @@ function App() {
           </ProtectedRoute>
         }>
           <Route index element={<AdminDashboardPage />} />
-          <Route path="events" element={<EventManagementPage />} />
-          <Route path="categories" element={<CategoryManagementPage />} />
+          {/* <Route path="events" element={<EventManagementPage />} /> */}
+          {/* <Route path="categories" element={<CategoryManagementPage />} /> */}
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
