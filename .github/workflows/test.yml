@@ -1,0 +1,28 @@
+name: Run Frontend Tests
+
+on:
+  push:
+    branches:
+      - frontend
+  pull_request:
+    branches:
+      - frontend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Adjust as needed
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run test
