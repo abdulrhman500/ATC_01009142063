@@ -12,6 +12,7 @@ import "@api/controllers/AuthController";
 import "@api/controllers/CategoryController";
 import "@api/controllers/EventController";
 import "@api/controllers/VenueController";
+import "@api/controllers/bookingController"
 
 export function configureApplication(container: Container, rootPath: string): Application {
     const server = new InversifyExpressServer(container, null, { rootPath });

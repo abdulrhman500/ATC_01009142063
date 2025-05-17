@@ -25,6 +25,7 @@ const translation = {
     dim: 'Dim',
     english: 'English',
     arabic: 'العربية',
+    settings: 'Settings',
   },
   auth: {
     email: 'Email',

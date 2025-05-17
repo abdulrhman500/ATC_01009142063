@@ -1,5 +1,7 @@
 ## 🚀 How to Run the Project
 
+### option 0 : hosted on AWS EC2 -> visit http://51.44.155.221 
+
 ### ✅ Option 1: Using Docker Compose (Recommended)
 
 Run the following command in the project root:

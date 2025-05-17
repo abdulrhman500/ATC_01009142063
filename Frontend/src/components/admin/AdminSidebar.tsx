@@ -13,8 +13,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
   
   const navItems = [
     { to: '/admin', icon: <LayoutDashboard size={20} />, label: t('admin.dashboard'), exact: true },
-    { to: '/admin/events', icon: <Calendar size={20} />, label: t('admin.eventsManagement') },
-    { to: '/admin/categories', icon: <Tag size={20} />, label: t('admin.categoriesManagement') },
+    // { to: '/admin/events', icon: <Calendar size={20} />, label: t('admin.eventsManagement') },
+    // { to: '/admin/categories', icon: <Tag size={20} />, label: t('admin.categoriesManagement') },
     { to: '/admin/settings', icon: <Settings size={20} />, label: t('common.settings') },
   ];
   

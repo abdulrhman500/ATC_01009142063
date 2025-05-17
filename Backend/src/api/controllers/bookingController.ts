@@ -15,7 +15,6 @@ import CreateBookingHandler  from "@src/application/booking/use-cases/CreateBook
 
 @controller("/booking")
 export default class BookingController implements interfaces.Controller {
-    CreateBookingHandler: any;
     constructor(
         @inject(TYPES.CreateBookingHandler) private readonly createBookingHandler: CreateBookingHandler
     ) { }
@@ -28,7 +27,7 @@ export default class BookingController implements interfaces.Controller {
         IsAuthorized([RoleType.CUSTOMER]),
         ValidationMiddleware(CreateBookingRequestDto, 'body')
     )
-    public async createVenue(req: Request, res: Response, next: NextFunction) {
+    public async createBooking(req: Request, res: Response, next: NextFunction) {
         const dto = req.body as CreateBookingRequestDto;
 
         const command = new CreateBookingCommand(
@@ -37,7 +36,7 @@ export default class BookingController implements interfaces.Controller {
         );
 
         try {
-            const createdBookingVO = await this.CreateBookingHandler.execute(command);
+            const createdBookingVO = await this.createBookingHandler.execute(command);
 
             const responseEntity = new ResponseEntity(
                 StatusCodes.CREATED,
