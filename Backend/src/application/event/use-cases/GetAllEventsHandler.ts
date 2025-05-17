@@ -1,40 +1,22 @@
-// src/application/event/use-cases/GetAllEventsHandler.ts
-// ... (imports)
-
+import DomainEvent from '@domain/event/Event';
 import { GetAllEventsQuery } from "@application/event/quries/GetAllEventsQuery";
 import { TYPES } from "@src/config/types";
 import ICategoryRepository from "@src/domain/category/interfaces/ICategoryRepository";
 import IEventRepository from "@src/domain/event/interfaces/IEventRepository";
 import { injectable ,inject} from "inversify";
+import Category from '@src/domain/category/Category';
 
 /**
  * Represents the structured result returned by the GetAllEventsHandler,
  * containing a paginated list of domain Event entities and pagination metadata.
  */
 export interface PaginatedEventsHandlerResult {
-    /**
-     * An array of Event domain entities for the current page.
-     */
-    events: Event[];
-
-    /**
-     * The total number of event items available across all pages matching the criteria.
-     */
+    events: DomainEvent[];
+    categoriesMap?: Map<number, Category>;         // <<< MUST BE PRESENT HERE
+    bookedEventIdsForCurrentUser?: Set<number>; // <<< MUST BE PRESENT HERE
     totalItems: number;
-
-    /**
-     * The current page number being returned.
-     */
     currentPage: number;
-
-    /**
-     * The number of items requested per page (the limit).
-     */
     itemsPerPage: number;
-
-    /**
-     * The total number of pages available based on totalItems and itemsPerPage.
-     */
     totalPages: number;
 }
 @injectable()
@@ -75,7 +57,7 @@ public async execute(query: GetAllEventsQuery): Promise<PaginatedEventsHandlerRe
     const totalPages = limit > 0 ? Math.ceil(totalCount / limit) : 0;
 
     return {
-        events: events as unknown as Event[],
+        events: events as unknown as DomainEvent[],
         totalItems: Number(totalCount),
         currentPage: Number(page),
         itemsPerPage: Number(limit),

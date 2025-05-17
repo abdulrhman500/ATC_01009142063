@@ -10,7 +10,7 @@ export default class MappableResponseDto {
      * @returns This method always throws an error.
      * @throws Error indicating that `toDtoFrom` must be implemented by the subclass.
      */
-    public static toDtoFrom(_source: any): any {
+    public static toDtoFrom(..._source: any): any {
         // `this.name` will refer to the name of the class on which this static method was called
         // (e.g., "CreateCategoryResponseDto" if it inherited and didn't override).
         throw new Error(

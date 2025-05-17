@@ -15,29 +15,27 @@ export default class PrismaEventRepository implements IEventRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
     // Helper to map Prisma Event to Domain Event
-    private mapToDomain(prismaEvent: PrismaEvent & { venue: PrismaVenue, category?: PrismaCategory | null }): Event {
-        // Assuming your Event.builder or constructor can handle this data
-        // This mapping needs to be robust based on your Event domain entity and VOs
+    private mapToDomain(prismaEventData: PrismaEvent & { venue: PrismaVenue, category?: PrismaCategory | null }): Event {
         return new Event.builder()
-            .setId(prismaEvent.id)
-            .setName(new EventName(prismaEvent.name))
-            .setDescription(new EventDescription(prismaEvent.description))
-            .setDate(new EventDate(prismaEvent.date))
+            .setId(prismaEventData.id)
+            .setName(new EventName(prismaEventData.name))
+            .setDescription(new EventDescription(prismaEventData.description))
+            .setDate(new EventDate(prismaEventData.date))
             .setLocation(
-                new VenueVO.Builder() // Assuming VenueVO has a builder
-                    .withId(prismaEvent.venue.id)
-                    .withName(prismaEvent.venue.name)
-                    .withStreet(prismaEvent.venue.street)
-                    .withCity(prismaEvent.venue.city)
-                    .withCountry(prismaEvent.venue.country)
-                    .withState(prismaEvent.venue.state || undefined)
-                    .withPostalCode(prismaEvent.venue.postalCode || undefined)
-                    .withPlaceUrl(prismaEvent.venue.placeUrl || undefined)
+                new VenueVO.Builder() // Assuming VenueVO is the correct type here
+                    .withId(prismaEventData.venue.id)
+                    .withName(prismaEventData.venue.name)
+                    .withStreet(prismaEventData.venue.street)
+                    .withCity(prismaEventData.venue.city)
+                    .withCountry(prismaEventData.venue.country)
+                    .withState(prismaEventData.venue.state || undefined)
+                    .withPostalCode(prismaEventData.venue.postalCode ?? undefined)
+                    .withPlaceUrl(prismaEventData.venue.placeUrl ?? undefined)
                     .build()
             )
-            .setPrice(new EventPrice(prismaEvent.priceValue, prismaEvent.priceCurrency))
-            .setPhotoUrl(new EventPhotoUrl(prismaEvent.photoUrl))
-            // category mapping would be needed if Event domain entity holds a Category domain object
+            .setPrice(new EventPrice(prismaEventData.priceValue, prismaEventData.priceCurrency))
+            .setPhotoUrl(new EventPhotoUrl(prismaEventData.photoUrl))
+            .setCategoryId(prismaEventData.categoryId) // Map categoryId
             .build();
     }
 

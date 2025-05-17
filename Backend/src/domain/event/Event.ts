@@ -15,9 +15,10 @@ export default class Event {
     readonly location: Venue;
     readonly price: EventPrice;
     readonly photoUrl: EventPhotoUrl;
+    readonly categoryId?: number | null; // Added categoryId
 
 
-    private constructor(id: number, name: EventName, description: EventDescription, date: EventDate, location: Venue, price: EventPrice, photoUrl: EventPhotoUrl) {
+    private constructor(id: number, name: EventName, description: EventDescription, date: EventDate, location: Venue, price: EventPrice, photoUrl: EventPhotoUrl,categoryId?: number | null ) {
         if (id <= 0) {
             throw new Error("Event ID must be a positive number");
         }
@@ -30,7 +31,11 @@ export default class Event {
       
         this.price = price;
         this.photoUrl = photoUrl;
+        this.categoryId = categoryId;
 
+    }
+    public getCategoryId(): number | null | undefined {
+        return this.categoryId;
     }
 
     public static builder = class EventBuilder {
@@ -45,6 +50,7 @@ export default class Event {
         // private updatedBy?: UserId;
         private price?: EventPrice;
         private photoUrl?: EventPhotoUrl;
+        private categoryId?: number | null;
 
         setId(id: number): this { this.id = id; return this; }
         setName(name: EventName): this { this.name = name; return this; }
@@ -53,23 +59,23 @@ export default class Event {
         setLocation(location: Venue): this { this.location = location; return this; }
         setPrice(price: EventPrice): this { this.price = price; return this; }
         setPhotoUrl(url: EventPhotoUrl): this { this.photoUrl = url; return this; }
+        setCategoryId(categoryId: number | null | undefined): this { // Added setter
+            this.categoryId = categoryId;
+            return this;
+        }
+
 
         build(): Event {
             if (
                 this.id == null || !this.name || !this.description || !this.date || !this.location ||
                 !this.price || !this.photoUrl
+                // categoryId can be optional
             ) {
-                throw new Error("Missing required fields.");
+                throw new Error("Missing required fields for Event.");
             }
-
             return new Event(
-                this.id,
-                this.name,
-                this.description,
-                this.date,
-                this.location,
-                this.price,
-                this.photoUrl
+                this.id, this.name, this.description, this.date, this.location,
+                this.price, this.photoUrl, this.categoryId
             );
         }
     }

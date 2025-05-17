@@ -13,7 +13,9 @@ import { GetAllEventsQuery } from '@application/event/quries/GetAllEventsQuery';
 import  GetAllEventsHandler,{ PaginatedEventsHandlerResult } from '@application/event/use-cases/GetAllEventsHandler';
 import { IsAuthorized } from "@api/middleware/isAuthorized.middleware";
 import { isAuthenticated } from "@api/middleware/isAuthenticated.middleware";
+import { IdentifyUserIfLogedin } from "@api/middleware/optionalAuth.middleware";
 import { RoleType } from "@src/shared/RoleType";
+import { IJwtPayload } from "@src/domain/user/interfaces/IJwtService";
 @controller("/events")
 export default class EventController implements interfaces.Controller {
     constructor(
@@ -73,20 +75,24 @@ export default class EventController implements interfaces.Controller {
      * schema:
      * $ref: '#/components/schemas/ResponseEntity_Error'
      */
-    @httpGet("/", ValidationMiddleware(GetAllEventsRequestDto, 'query'))
+    @httpGet("/", IdentifyUserIfLogedin ,ValidationMiddleware(GetAllEventsRequestDto, 'query'))
     public async getAllEvents(req: Request, res: Response, next: NextFunction) {
-        const queryDto = (req as any).validatedQuery as GetAllEventsRequestDto; // Query is validated by middleware
+        // Using req.validatedQuery as populated by your ValidationMiddleware
+        const queryDto = (req as any).validatedQuery as GetAllEventsRequestDto;
 
-        console.log(queryDto);
+        console.log(queryDto); 
         console.log("ffffffffffff");
         
-        
+        const user = (req as any).user as IJwtPayload | undefined; 
+
         const query = new GetAllEventsQuery(
             queryDto.page || 1,
             queryDto.limit || 10,
             queryDto.textSearch,
-            queryDto.categoryIds,    // These are already parsed number[] by DTO's @Transform
-            queryDto.categoryNames   // These are already parsed string[] by DTO's @Transform
+            queryDto.categoryIds,    // These should be number[] if DTO @Transform works via validatedQuery
+            queryDto.categoryNames,  // These should be string[] if DTO @Transform works via validatedQuery
+            user?.userId,            // Passing optional userId
+            user?.role as RoleType | undefined // Passing optional role, correctly typed
         );
 
         try {
@@ -96,11 +102,11 @@ export default class EventController implements interfaces.Controller {
             const responseEntity = new ResponseEntity(
                 StatusCodes.OK,
                 "Events retrieved successfully.",
-                responseDtoInstance // Pass DTO instance directly
+                responseDtoInstance
             );
             return res.status(responseEntity.getStatus()).json(responseEntity);
         } catch (error) {
-            return next(error); // Pass to global error handler
+            return next(error);
         }
     }
 }

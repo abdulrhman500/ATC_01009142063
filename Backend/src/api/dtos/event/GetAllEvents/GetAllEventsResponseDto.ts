@@ -1,11 +1,9 @@
 import { Expose, Type } from 'class-transformer';
 import MappableResponseDto from '@api/shared/MappableResponseDto';
-import EventSummaryResponseDto from '@api/dtos/event/GetAllEvents/EventSummaryResponseDto';
+import EventSummaryResponseDto from './EventSummaryResponseDto';
 import { PaginatedEventsHandlerResult } from '@application/event/use-cases/GetAllEventsHandler';
-// If Event domain entities are passed with their categories, you'll need Category domain entity too
 import Category from '@domain/category/Category';
-import Event from '@domain/event/Event';
-
+import DomainEvent from '@domain/event/Event'; // Use an alias for your domain Event
 
 export default class GetAllEventsResponseDto extends MappableResponseDto {
     @Expose()
@@ -22,25 +20,22 @@ export default class GetAllEventsResponseDto extends MappableResponseDto {
         Object.assign(this, data);
     }
 
-    // The source here is the result from the GetAllEventsHandler
-    // which includes domain Event entities. The mapping to EventSummaryResponseDto
-    // needs to happen here or assumes Event entities might have their category pre-fetched.
-    // For simplicity, let's assume Event entities might not have their category directly.
-    // The repository returns Events. If we need category name, the handler would fetch it.
-    // Or, we can pass events and a map of their categories.
-    // For now, let's assume EventSummaryResponseDto.fromEntity handles what it needs.
-    // If category is needed, the handler should provide it or EventSummaryResponseDto should fetch it (less ideal).
+    public static fromPaginatedResult(result: PaginatedEventsHandlerResult): GetAllEventsResponseDto {
+        // Explicitly tell map that eventEntity is your DomainEvent
+        const eventDtos = result.events.map((eventEntity: DomainEvent) => {
+            let associatedCategory: Category | undefined = undefined;
+            // Use the getCategoryId method from your DomainEvent
+            const categoryId = eventEntity.getCategoryId?.(); 
 
-    public static fromPaginatedResult(
-        result: PaginatedEventsHandlerResult,
-        // Optional: A way to get category for each event if needed by EventSummaryResponseDto.fromEntity
-        // categoryMap?: Map<number, Category> // categoryId -> Category entity
-    ): GetAllEventsResponseDto {
-        const eventDtos = result.events.map(eventEntity => {
-            // If EventSummaryResponseDto needs associated category to display name:
-            // const category = eventEntity.categoryId ? categoryMap?.get(eventEntity.categoryId) : undefined;
-            // return EventSummaryResponseDto.fromEntity(eventEntity, category);
-            return EventSummaryResponseDto.toDtoFrom(eventEntity as unknown as Event); // Type assertion to match expected Event domain type
+            if (categoryId != null && result.categoriesMap) { // Check for null or undefined
+                associatedCategory = result.categoriesMap.get(categoryId);
+            }
+
+            // Determine if the event is booked by the current user
+            // Ensure eventEntity.id is number here
+            const isBooked = result.bookedEventIdsForCurrentUser?.has(eventEntity.id) ?? false;
+
+            return EventSummaryResponseDto.toDtoFrom(eventEntity, isBooked, associatedCategory);
         });
 
         return new GetAllEventsResponseDto({
