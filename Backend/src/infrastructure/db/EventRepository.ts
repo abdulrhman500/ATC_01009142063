@@ -44,7 +44,7 @@ export default class PrismaEventRepository implements IEventRepository {
                     .withStreet(prismaEventData.venue.street)
                     .withCity(prismaEventData.venue.city)
                     .withCountry(prismaEventData.venue.country)
-                    .withState(prismaEventData.venue.state || undefined)
+                    .withState(prismaEventData.venue.state)
                     .withPostalCode(prismaEventData.venue.postalCode ?? undefined)
                     .withPlaceUrl(prismaEventData.venue.placeUrl ?? undefined)
                     .build()
@@ -61,7 +61,7 @@ export default class PrismaEventRepository implements IEventRepository {
             description: domainEvent.description.value,
             date: domainEvent.date.value,
             venueId: domainEvent.location.id, // Event.location is VenueVO which has an id
-            photoUrl: domainEvent.photoUrl ?? null, // Use getter and provide null if undefined
+            photoUrl: domainEvent.photoUrl?.toString() ?? null, // Use getter and provide null if undefined
             priceValue: domainEvent.price.value,
             priceCurrency: domainEvent.price.currency,
             categoryId: domainEvent.getCategoryId() ?? null, // Ensure null if undefined

@@ -63,12 +63,16 @@ export default class Event {
       
 
         build(): Event {
-            if (this.id == null || !this.name || !this.description || !this.date || !this.location ||
-                !this.price || !this.photoUrl) {
+            if (!this.name || !this.description || !this.date || !this.location ||
+                !this.price) {
+                    console.log(this);
+                    console.log("cfcvdffvd");
+                    
+                    
                 throw new Error("Missing required fields for Event.");
             }
             return new Event(
-                this.id, this.name, this.description, this.date, this.location,
+                this.id ?? -1, this.name, this.description, this.date, this.location,
                 this.price, this.photoUrl, this.categoryId
             );
         }

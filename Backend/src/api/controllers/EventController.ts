@@ -153,7 +153,7 @@ export default class EventController implements interfaces.Controller {
      */
     @httpPost(
         "/",
-        isAuthenticated, // 1. User must be authenticated
+        isAuthenticated, 
         IsAuthorized([RoleType.ADMIN]), // 2. User must be an ADMIN
         ValidationMiddleware(CreateEventRequestDto, 'body') // 3. Validate request body
     )

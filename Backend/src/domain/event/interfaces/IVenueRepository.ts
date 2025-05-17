@@ -4,6 +4,9 @@ import Venue from '@domain/event/value-objects/Venue'; // Assuming your Venue VO
 // A full Venue domain entity and repository would be more robust.
 
 export interface IVenueRepository {
+    findByName(name: string): unknown;
     findById(id: number): Promise<Venue | null>; // Return Venue VO or domain entity
+    findAll(): Promise<Venue[]>;
+    save(venue: Venue): Promise<Venue>
     // ... other methods like save, findByName etc.
 }

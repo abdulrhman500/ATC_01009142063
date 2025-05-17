@@ -54,7 +54,6 @@ export class CreateEventHandler {
             .setPrice(eventPrice)
             .setPhotoUrl(eventPhotoUrl)
             .setCategoryId(command.categoryId)
-            // No creatorId as per your last request
             .build();
 
         const savedEvent = await this.eventRepository.save(newEventEntity);

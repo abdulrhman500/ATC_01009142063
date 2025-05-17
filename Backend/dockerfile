@@ -1,33 +1,50 @@
-# ---- Builder Stage ----
-# Use a Node.js version that matches your development environment (e.g., LTS)
-FROM node:20-slim AS builder
+# Use a Node.js image. 'slim' is a good balance.
+# Using node:20-slim as it's Debian-based and we know Prisma works well with it
+# after installing OpenSSL.
+FROM node:20-slim
 
-# Install OpenSSL, which Prisma needs for downloading its engines
+# Install OpenSSL, which Prisma might need during npm install for downloading its engines
+# This step is still important for this base image.
 RUN apt-get update -y && \
     apt-get install -y openssl && \
     rm -rf /var/lib/apt/lists/* # Clean up apt cache
 
+# Set the working directory in the container
 WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json (or yarn.lock)
+# This is done first to leverage Docker caching for dependencies if these files haven't changed.
 COPY package*.json ./
+
+# Install ALL dependencies from package.json (including devDependencies)
+# This makes typescript, prisma CLI, etc., available for subsequent build steps
+# and for the entrypoint.sh script.
 RUN npm install
-COPY prisma ./prisma/
-RUN npx prisma generate
+
+# Copy the entire project's source code into the working directory.
+# Ensure your .dockerignore file is properly set up to exclude unnecessary files
+# like local node_modules, .git, dist, etc.
 COPY . .
+
+# Generate Prisma Client based on your schema.prisma (copied in the previous step)
+RUN npx prisma generate
+
+# Build the TypeScript application (compiles .ts files from src/ to .js in dist/)
 RUN npm run build
 
-# ---- Runtime Stage ----
-# FROM node:20-alpine AS runtime # <-- Change this line
-FROM node:20-slim AS runtime     
-
-WORKDIR /usr/src/app
+# Set the environment to production for the running application
 ENV NODE_ENV production
-COPY package*.json ./
-RUN npm install --omit=dev
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/prisma ./prisma
-COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+
+# Expose the port your application will run on
+# This should match the PORT your application listens on (e.g., from process.env.PORT)
+EXPOSE 3000
+
+# Copy your entrypoint script (which handles migrations and seeding)
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
-EXPOSE 3000
+
+# Set the entrypoint to our script
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
-CMD ["node", "dist/src/bootstrap.js"]
+
+# Default command to start the application (this is passed as arguments "$@" to entrypoint.sh)
+CMD ["npm", "run", "start:prod"]
