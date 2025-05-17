@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, ChangeEvent, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import eventService, { FrontendEvent, PaginatedEventsApiResponse } from '../../../services/eventService';
-import venueService, { VenueSummary } from '../../../services/venueService'; // For venue dropdown
-import categoryService, { FrontendCategoryNode } from '../../../services/categoryService'; // For category dropdown
+import eventService, { FrontendEvent, PaginatedEventsApiResponse, CreateEventData, UpdateEventData } from '../../../services/eventService'; // Ensure CreateEventData is imported
+import venueService, { VenueSummary } from '../../../services/venueService';
+import categoryService, { FrontendCategoryNode } from '../../../services/categoryService';
 import Button from '../../common/Button';
+import Input from '../../common/Input';
 import { Loader2, AlertTriangle, Edit3, Trash2, PlusCircle, RefreshCw, Search, FilterX } from 'lucide-react';
-import EventFormModal, { EventFormData } from './EventFormModal'; // Import the modal and its form data type
-import Input from '../../common/Input'; // For search
-import { map } from 'framer-motion/client';
+import EventFormModal, { EventFormData } from './EventFormModal'; // Assuming EventFormData is exported from here
 
 const ITEMS_PER_PAGE = 10;
 
 const EventManagementSection: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Added i18n for date formatting
     const [events, setEvents] = useState<FrontendEvent[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -22,41 +21,38 @@ const EventManagementSection: React.FC = () => {
 
     const [isEventModalOpen, setIsEventModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<FrontendEvent | null>(null);
+    const [modalError, setModalError] = useState<string | null>(null);
+    const [isModalSaving, setIsModalSaving] = useState(false);
 
-    // For form dropdowns
     const [availableVenues, setAvailableVenues] = useState<VenueSummary[]>([]);
     const [availableCategories, setAvailableCategories] = useState<FrontendCategoryNode[]>([]);
 
-    // Filters
     const [searchQueryInput, setSearchQueryInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>(''); // Single category ID string for filter
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('');
 
-     const fetchAuxiliaryDataForForm = useCallback(async () => {
+    const fetchAuxiliaryDataForForm = useCallback(async () => {
         try {
-            const [venuesRes, categoriesRes] = await Promise.all([
-                venueService.getAllVenues(), // Assuming this fetches all venues
+            const [venuesResponse, categoriesTree] = await Promise.all([
+                venueService.getAllVenues(),
                 categoryService.getCategoryTree()
             ]);
-            setAvailableVenues(venuesRes.data); // Assuming getAllVenues returns { data: VenueSummary[] }
-            setAvailableCategories(categoriesRes);
+            setAvailableVenues(venuesResponse.data || []); // venuesResponse is PaginatedVenuesApiResponse
+            setAvailableCategories(categoriesTree);
         } catch (err) {
             console.error("Failed to load auxiliary data for event form:", err);
-            // Set an error state for these if needed, or just log
+            setError(t('events.auxDataLoadError', 'Could not load necessary data for event form.'));
         }
-    }, []);
+    }, [t]);
 
-
-    const fetchEvents = useCallback(async (page: number, search: string, categoryId: string) => {
+    const fetchEvents = useCallback(async (page: number, search: string, categoryFilterId: string) => {
         setIsLoading(true);
         setError(null);
         try {
-            const catIdsArray = categoryId ? [categoryId] : [];
-            const response: PaginatedEventsApiResponse = await eventService.getEvents(
-                page,
-                ITEMS_PER_PAGE,
-                search,
-                catIdsArray.map(a => String(a)) // eventService.getEvents expects string[] for category IDs
+            // eventService.getEvents expects categoryIds as string[]
+            const categoryIdsParam = categoryFilterId ? [categoryFilterId] : undefined;
+            const response = await eventService.getEvents(
+                page, ITEMS_PER_PAGE, search, categoryIdsParam
             );
             setEvents(response.data);
             setTotalItems(response.totalItems);
@@ -64,50 +60,58 @@ const EventManagementSection: React.FC = () => {
             setCurrentPage(response.currentPage);
         } catch (err: any) {
             setError(err.message || t('events.loadError', 'Failed to load events.'));
+            if (page === 1) setEvents([]); // Clear on error only if it's the first page load for this filter set
         } finally {
             setIsLoading(false);
         }
     }, [t]);
 
-    // Debounce search
     useEffect(() => {
         const handler = setTimeout(() => setSearchQuery(searchQueryInput), 500);
         return () => clearTimeout(handler);
     }, [searchQueryInput]);
 
-    // Initial data fetch and refetch on filters/page change
     useEffect(() => {
         fetchEvents(currentPage, searchQuery, selectedCategoryFilter);
     }, [currentPage, searchQuery, selectedCategoryFilter, fetchEvents]);
 
-    useEffect(() => { // Fetch data for form dropdowns once
+    useEffect(() => {
         fetchAuxiliaryDataForForm();
     }, [fetchAuxiliaryDataForForm]);
 
-    // Reset page to 1 when filters change
-     useEffect(() => {
-        if (currentPage !== 1) { // Avoid resetting if already on page 1 due to another effect
-            setCurrentPage(1);
+    const isInitialFilterChange = useRef(true);
+    useEffect(() => {
+        if (isInitialFilterChange.current) {
+            isInitialFilterChange.current = false;
+            return;
         }
-    }, [searchQuery, selectedCategoryFilter]);
-
+        if (currentPage !== 1) {
+            setCurrentPage(1);
+        } else {
+            // If already on page 1, filters changed, so refetch page 1
+            fetchEvents(1, searchQuery, selectedCategoryFilter);
+        }
+    }, [searchQuery, selectedCategoryFilter, fetchEvents]); // Removed currentPage
 
     const handleAddEvent = () => {
         setEditingEvent(null);
+        setModalError(null);
         setIsEventModalOpen(true);
     };
 
     const handleEditEvent = (event: FrontendEvent) => {
         setEditingEvent(event);
+        setModalError(null);
         setIsEventModalOpen(true);
     };
 
     const handleDeleteEvent = async (eventId: string) => {
-        if (window.confirm(t('events.confirmDelete', `Are you sure you want to delete event ID ${eventId}?`))) {
+        if (window.confirm(t('events.confirmDelete', `Are you sure you want to delete event "${events.find(e=>e.id === eventId)?.name || eventId}"? This action cannot be undone.`))) {
+            setIsLoading(true); // Indicate general loading for the list
             try {
-                setIsLoading(true); // Show loading for delete action
-                await eventService.deleteEvent(Number(eventId)); // Assuming service expects number
-                fetchEvents(1, searchQuery, selectedCategoryFilter); // Refetch from page 1 after delete
+                await eventService.deleteEvent(eventId); // Assuming service expects string ID
+                // Refetch, ideally to the current page or page 1 if current page becomes empty
+                fetchEvents(totalItems - 1 === (currentPage - 1) * ITEMS_PER_PAGE && currentPage > 1 ? currentPage - 1 : currentPage, searchQuery, selectedCategoryFilter);
             } catch (err: any) {
                 setError(err.message || t('events.deleteError', 'Failed to delete event.'));
             } finally {
@@ -116,135 +120,173 @@ const EventManagementSection: React.FC = () => {
         }
     };
 
-    const handleEventModalSave = async (data: EventFormData, id?: string) => {
-        // Convert DTO data to what createEvent/updateEvent service methods expect
-        // CreateEventRequestDto from backend has: name, desc, date (ISO string), venueId (num), categoryId (num|null), priceVal, priceCurr, photoUrl
-        const apiPayload = {
-            name: data.name,
-            description: data.description,
-            date: new Date(data.date).toISOString(), // Ensure it's ISO string for backend
-            venueId: Number(data.venueId),
-            categoryId: data.categoryId ? Number(data.categoryId) : null,
-            priceValue: Number(data.priceValue),
-            priceCurrency: data.priceCurrency,
-            photoUrl: data.photoUrl || null, // Send null if empty
+    const handleEventModalSave = async (formData: EventFormData, idToUpdate?: string) => {
+        setIsModalSaving(true);
+        setModalError(null);
+
+        const combinedDateTime = new Date(`${formData.date}T${formData.time || '00:00:00'}`);
+        if (isNaN(combinedDateTime.getTime())) {
+            setModalError(t('events.validation.invalidDateTime', 'Invalid date or time provided.'));
+            setIsModalSaving(false);
+            return;
+        }
+
+        const apiPayload: CreateEventData = { // Type matches eventService.createEvent
+            name: formData.name.trim(),
+            description: formData.description.trim(),
+            date: combinedDateTime.toISOString(),
+            venueId: Number(formData.venueId), // Backend DTO expects number
+            categoryId: formData.categoryId && formData.categoryId !== '' ? Number(formData.categoryId) : null,
+            priceValue: parseFloat(formData.priceValue), // Use parseFloat
+            priceCurrency: formData.priceCurrency,
+            photoUrl: formData.photoUrl && formData.photoUrl.trim() !== '' ? formData.photoUrl.trim() : null, // Send null or undefined as per backend DTO
         };
 
         try {
-            if (id) { // Editing
-                await eventService.updateEvent(Number(id), apiPayload);
+            if (idToUpdate) { // Editing
+                await eventService.updateEvent(idToUpdate, apiPayload as UpdateEventData); // Assuming UpdateEventData is compatible
             } else { // Creating
-                await eventService.createEvent(apiPayload as any); // Cast if createEvent expects slightly different type
+                await eventService.createEvent(apiPayload);
             }
             setIsEventModalOpen(false);
             setEditingEvent(null);
-            fetchEvents(id ? currentPage : 1, searchQuery, selectedCategoryFilter); // Refetch (go to page 1 for new)
+            // Refetch events. If it was an edit, stay on current page. If new, go to page 1 or last page.
+            fetchEvents(idToUpdate ? currentPage : 1, searchQuery, selectedCategoryFilter);
         } catch (err: any) {
             console.error("Save event error:", err);
-            // Error will be displayed in the modal by its own error state
-            throw err; // Re-throw for the modal to catch and display
+            setModalError(err.message || (err.errors && err.errors[0]?.msg) || t('common.saveError', 'Failed to save event. Please check the details.'));
+            // Error is now set for the modal to display
+        } finally {
+            setIsModalSaving(false);
         }
     };
     
     const clearFilters = () => {
         setSearchQueryInput('');
         setSelectedCategoryFilter('');
-        // fetchEvents will be triggered by useEffect due to filter state change
+        // Page reset is handled by useEffect watching searchQuery and selectedCategoryFilter
     };
 
+    // Helper to flatten categories for the filter dropdown
+    const flattenCategoriesForFilterSelect = (nodes: FrontendCategoryNode[], level = 0): { value: string, label: string }[] => {
+        let options: { value: string, label: string }[] = [];
+        for (const node of nodes) {
+            options.push({ value: node.id, label: `${'--'.repeat(level)} ${node.name}` });
+            if (node.children && node.children.length > 0) {
+                options = options.concat(flattenCategoriesForFilterSelect(node.children, level + 1));
+            }
+        }
+        return options;
+    };
 
-    if (isLoading && events.length === 0 && currentPage === 1) { /* Initial Loading state */ }
-    if (error && events.length === 0 && currentPage === 1) { /* Initial Error state */ }
+    const tableHeaders = [
+        t('admin.events.table.name', "Name"),
+        t('admin.events.table.date', "Date"),
+        t('admin.events.table.venue', "Venue"),
+        t('admin.events.table.category', "Category"),
+        t('admin.events.table.price', "Price"),
+        t('common.actions', "Actions")
+    ];
 
     return (
-        <div className="p-4 sm:p-6 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+        <div className="p-4 sm:p-6 bg-white dark:bg-slate-800 dim:bg-slate-700 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 dim:border-slate-600">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <h2 className="text-xl font-semibold text-text-primary dark:text-white">
+                <h2 className="text-xl sm:text-2xl font-semibold text-text-primary dark:text-white dim:text-slate-100">
                     {t('admin.events.title', 'Manage Events')}
                 </h2>
-                <Button onClick={handleAddEvent} size="sm" className="w-full sm:w-auto">
+                <Button onClick={handleAddEvent} size="md" className="w-full sm:w-auto">
                     <PlusCircle size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
                     {t('admin.events.addNew', 'Add New Event')}
                 </Button>
             </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 p-4 border dark:border-slate-700 rounded-lg">
+            {/* Filters UI */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 p-4 border dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800/50">
                 <Input
                     type="text"
                     placeholder={t('common.searchByNameDesc', 'Search by name/description...')}
                     value={searchQueryInput}
                     onChange={(e) => setSearchQueryInput(e.target.value)}
-                    leftIcon={<Search size={18} className="text-gray-400" />}
+                    leftIcon={<Search size={18} className="text-gray-400 dark:text-gray-500" />}
+                    aria-label={t('common.searchEvents', 'Search events')}
                 />
                  <div>
-                    <label htmlFor="categoryFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="eventCategoryFilter" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                         {t('common.filterByCategory', 'Filter by Category')}
                     </label>
                     <select
-                        id="categoryFilter"
+                        id="eventCategoryFilter"
                         value={selectedCategoryFilter}
                         onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-slate-700 text-text-primary dark:text-white"
-                    >
+                        className="input-base w-full"> {/* Use your common input styles */}
                         <option value="">{t('common.allCategories', 'All Categories')}</option>
-                        {/* Simple flat list for filter dropdown for now */}
-                        {availableCategories.flatMap(c => [{id: c.id, name: c.name}, ...(c.children || []).map(child => ({id: child.id, name: `-- ${child.name}`}))]).map(opt => (
-                            <option key={opt.id} value={opt.id.toString()}>{opt.name}</option>
+                        {flattenCategoriesForFilterSelect(availableCategories).map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                     </select>
                 </div>
                 {(searchQuery || selectedCategoryFilter) && (
-                    <Button variant="outline" onClick={clearFilters} className="self-end">
+                    <Button variant="outline" onClick={clearFilters} className="self-end h-full md:mt-0 mt-4">
                         <FilterX size={16} className="mr-2" /> {t('common.clearFilters', 'Clear Filters')}
                     </Button>
                 )}
             </div>
 
-
             {isEventModalOpen && (
                 <EventFormModal
                     isOpen={isEventModalOpen}
-                    onClose={() => { setIsEventModalOpen(false); setEditingEvent(null); }}
+                    onClose={() => { setIsEventModalOpen(false); setEditingEvent(null); setModalError(null); }}
                     onSave={handleEventModalSave}
                     initialEventData={editingEvent}
                     availableVenues={availableVenues}
                     availableCategories={availableCategories}
+                    isLoading={isModalSaving} // Pass modal-specific loading state
+                    error={modalError}       // Pass modal-specific error state
                 />
             )}
 
+            {/* Table or List of Events */}
             {isLoading && events.length === 0 && currentPage === 1 ? (
-                <div className="text-center py-10"><Loader2 className="mx-auto h-12 w-12 text-primary-600 animate-spin" /></div>
+                <div className="text-center py-10"><Loader2 className="mx-auto h-12 w-12 text-primary-600 dark:text-primary-400 animate-spin" /></div>
             ) : error && events.length === 0 && currentPage === 1 ? (
-                 <div className="py-6 px-4 text-red-700 ..."> {/* Error display */} </div>
+                 <div className="py-6 px-4 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-md text-sm flex flex-col items-center text-center">
+                    <AlertTriangle size={24} className="mb-2" /> {error}
+                    <Button variant="outline" size="sm" onClick={() => fetchEvents(1, searchQuery, selectedCategoryFilter)} className="mt-3">
+                        <RefreshCw size={14} className="mr-1"/> {t('common.retry', 'Retry Again')}
+                    </Button>
+                </div>
             ) : events.length === 0 && !isLoading ? (
-                <p className="text-center py-10 text-text-secondary dark:text-gray-400">{t('common.noEventsFound', 'No events found matching your criteria.')}</p>
+                <p className="text-center py-10 text-text-secondary dark:text-gray-400">{t('common.noEventsFoundFilters', 'No events found matching your criteria.')}</p>
             ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto shadow-md rounded-lg border border-gray-200 dark:border-slate-700">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                        {/* Table Head */}
-                        <thead className="bg-gray-50 dark:bg-slate-700/50">
+                        <thead className="bg-gray-100 dark:bg-slate-700/80">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">VenueSummary</th>
-                                {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th> */}
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Price</th>
-                                <th className="relative px-4 py-3"><span className="sr-only">Actions</span></th>
+                                {tableHeaders.map(headerKey => (
+                                    <th key={headerKey} scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                        {headerKey}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
-                        {/* Table Body */}
                         <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                             {events.map((event) => (
-                                <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/30">
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{event.name}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{new Date(event.date).toLocaleDateString()}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{event.venueName}</td>
-                                    {/* <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{event.categoryName}</td> */}
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{event.price}</td>
+                                <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                                    <td className="px-4 py-3 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-white">{event.name}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">ID: {event.id}</div>
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{new Date(event.date).toLocaleDateString(i18n.language, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{event.venueName}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{event.categoryName || t('common.notApplicable', 'N/A')}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{event.price}</td>
                                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2 rtl:space-x-reverse">
-                                        <Button variant="outline" size="sm" onClick={() => handleEditEvent(event)}><Edit3 size={14} /> <span className="ml-1 rtl:mr-1 rtl:ml-0 hidden sm:inline">Edit</span></Button>
-                                        <Button variant="danger" size="sm" onClick={() => handleDeleteEvent(event.id)}><Trash2 size={14} /> <span className="ml-1 rtl:mr-1 rtl:ml-0 hidden sm:inline">Delete</span></Button>
+                                        <Button variant="icon" size="sm" onClick={() => handleEditEvent(event)} title={t('common.edit', 'Edit')} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                            <Edit3 size={16} />
+                                        </Button>
+                                        <Button variant="iconDanger" size="sm" onClick={() => handleDeleteEvent(event.id)} title={t('common.delete', 'Delete')} className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                            <Trash2 size={16} />
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}
@@ -253,10 +295,18 @@ const EventManagementSection: React.FC = () => {
                 </div>
             )}
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="mt-6 flex justify-between items-center">
-                    {/* ... Pagination buttons ... */}
+                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <Button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage <= 1 || isLoading} size="sm" variant="outline">
+                        {t('common.previous', 'Previous')}
+                    </Button>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {t('common.page', 'Page')} {currentPage} {t('common.of', 'of')} {totalPages}
+                        <span className="hidden sm:inline"> ({t('common.totalItems', 'Total:')} {totalItems})</span>
+                    </span>
+                    <Button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage >= totalPages || isLoading} size="sm" variant="outline">
+                        {t('common.next', 'Next')}
+                    </Button>
                 </div>
             )}
         </div>

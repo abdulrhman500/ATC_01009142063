@@ -12,8 +12,8 @@ export default class PrismaBookingRepository implements IBookingRepository {
         
         const res = await this.prisma.booking.create({
             data: {
-                userId: userId as number,
-                eventId: eventId as number,
+                userId: Number(userId) as number,
+                eventId: Number(eventId) as number,
             },
         });
 

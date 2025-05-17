@@ -15,7 +15,6 @@ import CreateBookingHandler  from "@src/application/booking/use-cases/CreateBook
 
 @controller("/booking")
 export default class BookingController implements interfaces.Controller {
-    CreateBookingHandler: any;
     constructor(
         @inject(TYPES.CreateBookingHandler) private readonly createBookingHandler: CreateBookingHandler
     ) { }
@@ -37,7 +36,7 @@ export default class BookingController implements interfaces.Controller {
         );
 
         try {
-            const createdBookingVO = await this.CreateBookingHandler.execute(command);
+            const createdBookingVO = await this.createBookingHandler.execute(command);
 
             const responseEntity = new ResponseEntity(
                 StatusCodes.CREATED,
