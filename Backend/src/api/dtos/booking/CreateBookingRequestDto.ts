@@ -1,14 +1,12 @@
-import { Expose, Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional } from 'class-validator';
+// Backend: src/api/dtos/booking/CreateBookingRequestDto.ts (Corrected)
+import { Expose, Type } from 'class-transformer';
+import { IsNotEmpty, IsInt, Min } from 'class-validator';
 
 export default class CreateBookingRequestDto {
-
-    @IsNotEmpty({ message: "category name is required" })
-    eventId: number | string
-
-    constructor(name: string, parentId: number) {
-        this.eventId = name;
-    }
-
-
+    @Expose()
+    @IsNotEmpty({ message: "Event ID is required." })
+    @Type(() => Number) // Transforms incoming string (e.g., from JSON) to number for validation
+    @IsInt({ message: "Event ID must be an integer." })
+    @Min(1, { message: "Event ID must be a positive number."})
+    eventId!: number; // Expect a number after transformation
 }

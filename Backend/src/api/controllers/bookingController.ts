@@ -28,7 +28,7 @@ export default class BookingController implements interfaces.Controller {
         IsAuthorized([RoleType.CUSTOMER]),
         ValidationMiddleware(CreateBookingRequestDto, 'body')
     )
-    public async createVenue(req: Request, res: Response, next: NextFunction) {
+    public async createBooking(req: Request, res: Response, next: NextFunction) {
         const dto = req.body as CreateBookingRequestDto;
 
         const command = new CreateBookingCommand(
