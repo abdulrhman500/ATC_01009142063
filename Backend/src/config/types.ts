@@ -10,12 +10,17 @@ export const TYPES = {
 
     IPasswordHasher: Symbol.for("IPasswordHasher"),
 
-    RegisterUserHandler: Symbol.for("RegisterUserHandler"),
+    IJwtService: Symbol.for("IJwtService"),
 
+    RegisterUserHandler: Symbol.for("RegisterUserHandler"),
+    LoginUserHandler : Symbol.for("LoginUserHandler"),
+
+    
     CreateCategoryHandler: Symbol.for("CreateCategoryHandler"),
     GetCategoryTreeHandler: Symbol.for("GetCategoryTreeHandler"),
     UpdateCategoryHandler: Symbol.for("UpdateCategoryHandler"),
     DeleteCategoryHandler: Symbol.for("DeleteCategoryHandler"),
     GetAllCategoriesHandler: Symbol.for("GetAllCategoriesHandler"),
     GetCategoryByIdHandler : Symbol.for("GetCategoryByIdHandler"),
+
 };

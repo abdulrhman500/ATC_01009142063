@@ -36,6 +36,15 @@ export class BadRequestException extends HttpException{
     super(400, message);
   }
 }
-
+export class UnauthorizedException extends HttpException{
+  constructor(message: string) {
+    super(401, message);
+  }
+}
+export class ForbiddenException extends HttpException{
+  constructor(message: string) {
+    super(403, message);
+  }
+}
 
 

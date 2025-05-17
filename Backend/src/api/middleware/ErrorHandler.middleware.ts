@@ -2,11 +2,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes, ReasonPhrases } from 'http-status-codes';
 import ResponseEntity from '@api/shared/ResponseEntity';
-import UserAlreadyExistException from '@shared/exceptions/UserAlreadyExistException.'; // Assuming correct path
+import UserAlreadyExistException from '@domain/user/exceptions/UserAlreadyExistException';
 import { HttpException, NotFoundException } from '@shared/exceptions/http.exception'; // Assuming NotFoundException is defined here or similar
 
 const errorHandlerMiddleware = (err: any, req: Request, res: Response, next: NextFunction): void => {
     console.error("Caught exception:", err.message); // Log the message for clarity
+console.log("Caught exception:", err); // Log the message for clarity
+console.log("Type of err:", typeof err); // Check the type of err
 
     if (err instanceof NotFoundException) { // ADD THIS BLOCK
         const responseEntity = new ResponseEntity(StatusCodes.NOT_FOUND, err.message, null);

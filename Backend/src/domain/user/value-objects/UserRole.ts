@@ -14,11 +14,11 @@ export default class Role {
     }
 
     public static defaultUser(): Role {
-        return new Role(RoleType.USER);
+        return new Role(RoleType.CUSTOMER);
     }
 
     public static adminUser(): Role {
-        return new Role(RoleType.USER);
+        return new Role(RoleType.ADMIN);
     }
 
     public getValue(): RoleType {
@@ -28,14 +28,15 @@ export default class Role {
     public isAdmin(): boolean {
         return this.role === RoleType.ADMIN;
     }
-    public isUser(): boolean {
-        return this.role === RoleType.USER;
+
+    public isCustomer(): boolean {
+        return this.role === RoleType.CUSTOMER;
     }
     public isGuest(): boolean {
         return this.role === RoleType.GUEST;
     }
     public toString(): string {
-        return this.role;
+        return this.role.toString();
     }
 
 }

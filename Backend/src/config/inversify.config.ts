@@ -19,6 +19,9 @@ import GetAllCategoriesHandler from "@src/application/category/use-cases/GetAllC
 import GetCategoryByIdHandler from "@src/application/category/use-cases/GetCategoryByIdHandler";
 import IEventRepository from "@src/domain/event/interfaces/IEventRepository";
 import EventRepository from "@src/infrastructure/db/EventRepository";
+import { IJwtService } from "@src/domain/user/interfaces/IJwtService";
+import { JwtService } from "@src/infrastructure/security/JwtService";
+import LoginUserHandler from "@src/application/user/use-cases/LoginUserHandler";
 
 const container = new Container();
 
@@ -36,7 +39,8 @@ container.bind<UpdateCategoryHandler>(TYPES.UpdateCategoryHandler).to(UpdateCate
 container.bind<DeleteCategoryHandler>(TYPES.DeleteCategoryHandler).to(DeleteCategoryHandler);
 container.bind<GetAllCategoriesHandler>(TYPES.GetAllCategoriesHandler).to(GetAllCategoriesHandler);
 container.bind<GetCategoryByIdHandler>(TYPES.GetCategoryByIdHandler).to(GetCategoryByIdHandler);
-
+container.bind<IJwtService>(TYPES.IJwtService).to(JwtService);
+container.bind<LoginUserHandler>(TYPES.LoginUserHandler).to(LoginUserHandler);
 export {
     container,
     TYPES

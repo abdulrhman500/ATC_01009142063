@@ -15,7 +15,7 @@ export class Argon2PasswordHasher implements IPasswordHasher {
     }
 
     public async verify(plainTextPassword: string, storedHash: string): Promise<boolean> {
-        const isValid = await argon2.verify(plainTextPassword, storedHash);
+        const isValid = await argon2.verify(storedHash,plainTextPassword);
         return isValid;
     }
 }
