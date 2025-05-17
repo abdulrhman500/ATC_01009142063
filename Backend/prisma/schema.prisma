@@ -28,7 +28,7 @@ model Event {
   date          DateTime
   venue         Venue              @relation(fields: [venueId], references: [id])
   venueId       Int
-  photoUrl      String
+  photoUrl      String?
   priceValue    Float
   priceCurrency String
   category      Category?          @relation(fields: [categoryId], references: [id], onDelete: Restrict) // MODIFIED: onDelete: Restrict

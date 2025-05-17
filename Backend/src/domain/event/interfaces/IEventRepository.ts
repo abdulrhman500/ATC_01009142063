@@ -23,6 +23,6 @@ export default interface IEventRepository {
 
     findById(id: number): Promise<Event | null>;
     // Add create, update, delete methods as you build those endpoints
-    // save(event: Event): Promise<Event>;
+    save(event: Event): Promise<Event>;
     // delete(id: number): Promise<boolean>;
 }

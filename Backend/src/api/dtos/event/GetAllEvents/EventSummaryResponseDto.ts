@@ -10,7 +10,7 @@ export default class EventSummaryResponseDto extends MappableResponseDto {
     @Expose() date!: string;
     @Expose() venueName!: string;
     @Expose() price!: string;
-    @Expose() photoUrl!: string;
+    @Expose() photoUrl?: string|undefined;
     @Expose() categoryName?: string;
     @Expose() isBooked!: boolean; // New field, non-optional for simplicity in DTO, will default to false if not customer/booked
 
@@ -33,7 +33,7 @@ export default class EventSummaryResponseDto extends MappableResponseDto {
             date: entity.date.value.toISOString(),
             venueName: entity.location.name,
             price: `${entity.price.value.toFixed(2)} ${entity.price.currency}`,
-            photoUrl: entity.photoUrl.url,
+            photoUrl: entity?.photoUrl?.url? entity.photoUrl.url: undefined,
             categoryName: associatedCategory ? associatedCategory.getName().getValue() : undefined,
             isBooked: isBookedForCurrentUser, 
         });

@@ -1,28 +1,44 @@
+import {
+    PrismaClient,
+    Event as PrismaEventType, // Alias for Prisma's generated Event type
+    Venue as PrismaVenueType,
+    Category as PrismaCategoryType,
+    Prisma // For Prisma utility types like WhereInput and Payloads
+} from '@prisma/client';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '@src/config/types';
-import { PrismaClient, Event as PrismaEvent, Venue as PrismaVenue, Category as PrismaCategory } from '@prisma/client';
 import IEventRepository, { FindEventsPaginatedParams, PaginatedEventsResult } from '@domain/event/interfaces/IEventRepository';
-import Event from '@domain/event/Event';
+import Event from '@domain/event/Event'; // Your Domain Event entity
 import EventName from '@domain/event/value-objects/EventName';
 import EventDescription from '@domain/event/value-objects/EventDescription';
 import EventDate from '@domain/event/value-objects/EventDate';
-import VenueVO from '@domain/event/value-objects/Venue'; // Your Venue VO
+import VenueVO from '@domain/event/value-objects/Venue'; // Your Venue Value Object
 import EventPrice from '@domain/event/value-objects/EventPrice';
 import EventPhotoUrl from '@domain/event/value-objects/EventPhotoUrl';
+
+// Define a more specific type for Prisma Event with its relations included
+type PrismaEventWithRelations = Prisma.EventGetPayload<{
+    include: { venue: true, category: true }
+}>;
 
 @injectable()
 export default class PrismaEventRepository implements IEventRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
-    // Helper to map Prisma Event to Domain Event
-    private mapToDomain(prismaEventData: PrismaEvent & { venue: PrismaVenue, category?: PrismaCategory | null }): Event {
+    private mapToDomain(prismaEventData: PrismaEventWithRelations): Event {
+        const photoUrlVO = prismaEventData.photoUrl
+            ? new EventPhotoUrl(prismaEventData.photoUrl)
+            : undefined;
+
+    
+
         return new Event.builder()
             .setId(prismaEventData.id)
             .setName(new EventName(prismaEventData.name))
             .setDescription(new EventDescription(prismaEventData.description))
             .setDate(new EventDate(prismaEventData.date))
             .setLocation(
-                new VenueVO.Builder() // Assuming VenueVO is the correct type here
+                new VenueVO.Builder()
                     .withId(prismaEventData.venue.id)
                     .withName(prismaEventData.venue.name)
                     .withStreet(prismaEventData.venue.street)
@@ -34,74 +50,66 @@ export default class PrismaEventRepository implements IEventRepository {
                     .build()
             )
             .setPrice(new EventPrice(prismaEventData.priceValue, prismaEventData.priceCurrency))
-            .setPhotoUrl(new EventPhotoUrl(prismaEventData.photoUrl))
-            .setCategoryId(prismaEventData.categoryId) // Map categoryId
+            .setPhotoUrl(photoUrlVO)
+            .setCategoryId(prismaEventData.categoryId)
             .build();
     }
 
+    private mapToPrismaData(domainEvent: Event): Omit<Prisma.EventCreateInput, 'venue' | 'category'> & { venueId: number, categoryId?: number | null } {
+        const data = {
+            name: domainEvent.name.value,
+            description: domainEvent.description.value,
+            date: domainEvent.date.value,
+            venueId: domainEvent.location.id, // Event.location is VenueVO which has an id
+            photoUrl: domainEvent.photoUrl ?? null, // Use getter and provide null if undefined
+            priceValue: domainEvent.price.value,
+            priceCurrency: domainEvent.price.currency,
+            categoryId: domainEvent.getCategoryId() ?? null, // Ensure null if undefined
+        };
+        // This explicit typing helps, Prisma often infers well if types are exact.
+        return data as Omit<Prisma.EventCreateInput, 'venue' | 'category'> & { venueId: number, categoryId?: number | null };
+    }
+
+
     async findPaginated(params: FindEventsPaginatedParams): Promise<PaginatedEventsResult> {
         const { page, limit, textSearch, categoryIds } = params;
-        const skip = (page - 1) * limit;
-        console.log("textSearch", textSearch);
-        console.log("categoryIds", categoryIds);
-        console.log("skip", skip);
-        console.log("limit", limit);
-        console.log("page", page);
-        console.log("ggggggggggggggggggg");
-        
-        
-        
+        const skip = (page - 1) * limit; // page and limit should be numbers here
 
-        const whereClause: any = { AND: [] }; // Prisma.EventWhereInput equivalent
+        const whereConditions: Prisma.EventWhereInput[] = [];
 
         if (textSearch && textSearch.trim() !== '') {
-            // Using Prisma's full-text search `search` if you've defined @@fulltext index
-            // The query needs to be formatted for tsquery (e.g., 'word1 & word2', 'word1 | word2')
-            // A simple approach is to split words and join with '&' or use plainto_tsquery compatible format
-            const searchQuery = textSearch.trim().split(/\s+/).join(' & ');
-            // whereClause.AND.push({ // TODO
-            //     OR: [
-            //         { name: { search: searchQuery } },
-            //         { description: { search: searchQuery } },
-            //     ],
-            // });
-            // Fallback if FTS index is not set up or for simpler 'contains'
-            whereClause.AND.push({
-              OR: [
-                { name: { contains: textSearch, mode: 'insensitive' } },
-                { description: { contains: textSearch, mode: 'insensitive' } },
-              ],
+            const searchText = textSearch.trim();
+            whereConditions.push({
+                OR: [
+                    { name: { contains: searchText, mode: 'insensitive' } },
+                    { description: { contains: searchText, mode: 'insensitive' } },
+                ],
             });
         }
 
         if (categoryIds && categoryIds.length > 0) {
-            whereClause.AND.push({
+            whereConditions.push({
                 categoryId: { in: categoryIds },
             });
         }
 
-        // Remove AND if it's empty to avoid Prisma errors
-        if (whereClause.AND.length === 0) {
-            delete whereClause.AND;
-        }
-
+        const finalWhereClause: Prisma.EventWhereInput = whereConditions.length > 0 ? { AND: whereConditions } : {};
 
         const [prismaEvents, totalCount] = await this.prisma.$transaction([
             this.prisma.event.findMany({
-                where: whereClause,
+                where: finalWhereClause,
                 include: {
-                    venue: true, // Include venue data for mapping to VenueVO
-                    category: true, // Include category for mapping or display
+                    venue: true,
+                    category: true,
                 },
-                skip: Number(skip),
-                take: Number(limit),
-                orderBy: { date: 'desc' }, // Example ordering
+                skip: skip, // Already number
+                take: limit, // Already number
+                orderBy: { date: 'desc' }, // As per your working tests
             }),
-            this.prisma.event.count({ where: whereClause }),
+            this.prisma.event.count({ where: finalWhereClause }),
         ]);
 
-        const events = prismaEvents.map(pe => this.mapToDomain(pe as any)); // Cast as any to satisfy include types temporarily
-
+        const events = prismaEvents.map(pe => this.mapToDomain(pe as PrismaEventWithRelations));
         return { events, totalCount };
     }
 
@@ -110,14 +118,47 @@ export default class PrismaEventRepository implements IEventRepository {
             where: { id },
             include: { venue: true, category: true },
         });
-        return prismaEvent ? this.mapToDomain(prismaEvent as any) : null;
+        return prismaEvent ? this.mapToDomain(prismaEvent) : null;
     }
 
+    async save(event: Event): Promise<Event> {
+        const prismaData = this.mapToPrismaData(event);
+        let savedPrismaEvent: PrismaEventWithRelations;
+
+        // Event.id is number, builder sets to -1 for new.
+        if (event.id === -1) {
+            savedPrismaEvent = await this.prisma.event.create({
+                data: prismaData as unknown as Prisma.EventCreateInput, // Cast as EventCreateInput
+                include: { venue: true, category: true },
+            });
+        } else {
+            savedPrismaEvent = await this.prisma.event.update({
+                where: { id: event.id },
+                data: prismaData as Prisma.EventUpdateInput, // Cast as EventUpdateInput
+                include: { venue: true, category: true },
+            });
+        }
+        return this.mapToDomain(savedPrismaEvent);
+    }
 
     async reassignEventsCategory(oldCategoryId: number, newCategoryId: number): Promise<void> {
         await this.prisma.event.updateMany({
             where: { categoryId: oldCategoryId },
             data: { categoryId: newCategoryId },
         });
+    }
+
+    // Add delete method if it's part of your IEventRepository interface
+    async deleteById(id: number): Promise<boolean> {
+        try {
+            await this.prisma.event.delete({ where: { id } });
+            return true;
+        } catch (error: any) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+                // Record to delete not found
+                return false;
+            }
+            throw error; // Re-throw other errors
+        }
     }
 }

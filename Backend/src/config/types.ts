@@ -8,6 +8,7 @@ export const TYPES = {
     IEventRepository: Symbol.for("IEventRepository"),
     ICategoryRepository: Symbol.for("ICategoryRepository"),
     IBookingRepository: Symbol.for("IBookingRepository"),
+    IVenueRepository: Symbol.for("IVenueRepository"),
     
     IPasswordHasher: Symbol.for("IPasswordHasher"),
 
