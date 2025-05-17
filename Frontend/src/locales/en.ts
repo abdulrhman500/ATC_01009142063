@@ -1,6 +1,6 @@
 const translation = {
   common: {
-    appName: 'Event Hub',
+    appName: 'Eventora',
     loading: 'Loading...',
     error: 'An error occurred',
     save: 'Save',

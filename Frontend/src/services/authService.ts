@@ -1,109 +1,148 @@
-import api from './api';
+// src/services/authService.ts
 
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
+import api from './api'; // Your configured Axios instance
 
-interface RegisterData extends LoginCredentials {
-  name: string;
-}
+// Define UserRole type consistently for the frontend.
+// This should match the string values your backend uses (e.g., 'admin', 'customer').
+// You already have this in your AuthContext, ensure it's consistent or import from a shared frontend types file.
+export type UserRole = 'admin' | 'customer' | null;
 
-interface AuthResponse {
-  user: {
+// Interface for user data received from the API
+interface UserDataFromApi {
     id: string;
-    name: string;
+    username: string;
     email: string;
-    role: string;
-  };
-  token: string;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
+    fullName?: string; // Include if your backend DTO for user details provides this
+    role: UserRole;   // Uses the frontend UserRole type
 }
+
+// Interface for the expected payload from login/register API calls
+export interface AuthApiResponsePayload {
+    user: UserDataFromApi;
+    accessToken: string;
+    tokenType: string;  // Should be "Bearer"
+    expiresIn: number;  // Expiration time in seconds
+}
+
+// Interface for login credentials
+export interface LoginCredentials {
+    email?: string;
+    username?: string; // Allow login with either email or username
+    password: string;
+}
+
+// Interface for registration data (for customers)
+export interface CustomerRegisterData {
+    firstName: string;
+    middleName?: string;
+    lastName: string;
+    username: string;
+    email: string;
+    password: string;
+    // Role is typically NOT sent by client for public registration; backend assigns default
+}
+
+// Interface for admin registration data (payload for POST /auth/register/admin)
+// Typically, an existing admin makes this call, and the backend assigns the ADMIN role.
+export interface AdminRegisterData {
+    firstName: string;
+    middleName?: string;
+    lastName: string;
+    username: string;
+    email: string;
+    password: string;
+    // Client does not specify the role here; backend /auth/register/admin endpoint sets it to ADMIN
+}
+
+
+const AUTH_API_PATH = '/auth'; // Relative to your axios baseURL (e.g., http://localhost:3000/api/v1)
 
 const authService = {
-  // Customer authentication
-  loginCustomer: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // This would typically be a real API call
-    // For now we'll return mock data
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          user: {
-            id: '1',
-            name: credentials.email.split('@')[0],
-            email: credentials.email,
-            role: 'customer'
-          },
-          token: 'mock-jwt-token-for-customer'
-        });
-      }, 500);
-    });
-  },
-  
-  registerCustomer: async (data: RegisterData): Promise<AuthResponse> => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          user: {
-            id: Math.random().toString(36).substring(2, 9),
-            name: data.name,
-            email: data.email,
-            role: 'customer'
-          },
-          token: 'mock-jwt-token-for-customer'
-        });
-      }, 500);
-    });
-  },
-  
-  // Admin authentication
-  loginAdmin: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          user: {
-            id: '2',
-            name: 'Admin User',
-            email: credentials.email,
-            role: 'admin'
-          },
-          token: 'mock-jwt-token-for-admin'
-        });
-      }, 500);
-    });
-  },
-  
-  registerAdmin: async (data: RegisterData): Promise<AuthResponse> => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          user: {
-            id: Math.random().toString(36).substring(2, 9),
-            name: data.name,
-            email: data.email,
-            role: 'admin'
-          },
-          token: 'mock-jwt-token-for-admin'
-        });
-      }, 500);
-    });
-  },
-  
-  // Logout (common for both roles)
-  logout: async (): Promise<void> => {
-    // Clear token from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-  
-  // Get current user profile
-  getCurrentUser: async (): Promise<AuthResponse['user'] | null> => {
-    // In a real app, we would validate the token with the server
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  }
+    /**
+     * Logs in a user (customer or admin). The backend determines the role.
+     */
+    login: async (credentials: LoginCredentials): Promise<AuthApiResponsePayload> => {
+        try {
+            const response = await api.post<{ statusCode: number, message: string, payload: AuthApiResponsePayload }>(
+                `${AUTH_API_PATH}/login`,
+                credentials
+            );
+            // Assuming backend wraps the actual DTO in a 'payload' field of ResponseEntity
+            return response.data.payload;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw error.response.data; // Re-throw structured error from backend
+            }
+            throw new Error(error.message || 'Login failed. Please check your credentials or try again later.');
+        }
+    },
+
+    /**
+     * Registers a new customer. Backend assigns default role (e.g., CUSTOMER).
+     */
+    registerCustomer: async (data: CustomerRegisterData): Promise<AuthApiResponsePayload> => {
+        try {
+            // Assuming your backend /auth/register for customers returns a similar payload
+            // to login upon successful registration (e.g., for auto-login).
+            // If it only returns user info without a token, adjust AuthApiResponsePayload for this method.
+            const response = await api.post<{ statusCode: number, message: string, payload: AuthApiResponsePayload }>(
+                `${AUTH_API_PATH}/register`,
+                data
+            );
+            return response.data.payload;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw error.response.data;
+            }
+            throw new Error(error.message || 'Registration failed. Please try again.');
+        }
+    },
+
+    /**
+     * Registers a new admin. This action must be performed by an already authenticated admin.
+     * The calling context (e.g., an admin panel UI) must ensure an admin token is present.
+     * The 'api' instance will automatically include the Authorization header if a token is in localStorage.
+     */
+    registerAdmin: async (data: AdminRegisterData): Promise<AuthApiResponsePayload> => {
+        // This should call your specific backend endpoint for creating admins by an admin.
+        // The backend endpoint will handle setting the role to ADMIN.
+        try {
+            const response = await api.post<{ statusCode: number, message: string, payload: AuthApiResponsePayload }>(
+                `${AUTH_API_PATH}/register/admin`, // Endpoint for admin to register another admin
+                data
+            );
+            return response.data.payload;
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                throw error.response.data;
+            }
+            throw new Error(error.message || 'Admin registration failed. Please try again.');
+        }
+    },
+
+    logout: (): void => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // If your 'api' instance defaults Authorization header, you might want to clear it explicitly:
+        // delete api.defaults.headers.common['Authorization'];
+        // Or better, the request interceptor simply won't add it if 'token' is null.
+        console.log("User logged out, local data and token cleared.");
+    },
+
+    getCurrentUser: (): UserDataFromApi | null => {
+        const storedUser = localStorage.getItem('user');
+        try {
+            return storedUser ? JSON.parse(storedUser) as UserDataFromApi : null;
+        } catch (e) {
+            console.error("Failed to parse stored user data:", e);
+            localStorage.removeItem('token'); // Also clear token if user data is corrupt
+            localStorage.removeItem('user');
+            return null;
+        }
+    }
 };
 
 export default authService;
