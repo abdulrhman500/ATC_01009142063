@@ -1,6 +1,6 @@
 
 export default class UserId {
-    public readonly value: number;
+    private readonly value: number;
 
     constructor(value: number) {
         if (value == null || !Number.isInteger(value) || value <= 0) {
@@ -18,5 +18,9 @@ export default class UserId {
 
     toString(): string {
         return this.value.toString();
+    }
+
+    public getValue(): number {
+        return this.value;
     }
 }

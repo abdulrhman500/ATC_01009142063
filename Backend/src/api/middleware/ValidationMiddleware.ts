@@ -1,11 +1,10 @@
-// @api/middleware/ValidationMiddleware.ts
+// src/api/middleware/ValidationMiddleware.ts
 import { Request, Response, NextFunction } from "express";
 import { validate, ValidationError } from 'class-validator';
-import { plainToInstance } from 'class-transformer'; // Import plainToInstance
+import { plainToInstance, ClassConstructor } from 'class-transformer';
 import { StatusCodes } from 'http-status-codes';
-import ResponseEntity from "@api/shared/ResponseEntity"; // Your response formatter
+import ResponseEntity from "@api/shared/ResponseEntity";
 
-// Helper function to format validation errors
 function formatValidationErrors(errors: ValidationError[]): any[] {
     return errors.map(error => ({
         property: error.property,
@@ -14,31 +13,64 @@ function formatValidationErrors(errors: ValidationError[]): any[] {
     }));
 }
 
-// Middleware factory function
-export function ValidationMiddleware(dtoType: any) {
-    return (req: Request, res: Response, next: NextFunction) => {
-        // 1. Transform plain request body object to an instance of the DTO class
-        // plainToInstance handles mapping properties and applying transformations like @Type, @Transform
-        const instance = plainToInstance(dtoType, req.body);
+export type RequestDataSource = 'body' | 'query' | 'params';
 
-        // 2. Validate the instance
-        // Use whitelist and forbidNonWhitelisted to strip unknown properties and reject requests with them
-        validate(instance, { whitelist: true, forbidNonWhitelisted: true }).then(errors => {
+export function ValidationMiddleware<T extends object>(
+    dtoType: ClassConstructor<T>,
+    source: RequestDataSource = 'body', // Default to 'body' for backward compatibility
+    // Validation options from class-validator
+    validationOptions: { whitelist?: boolean, forbidNonWhitelisted?: boolean, skipMissingProperties?: boolean } = 
+        { whitelist: true, forbidNonWhitelisted: true, skipMissingProperties: false } 
+) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        let dataToValidate: any;
+
+        switch (source) {
+            case 'query':
+                dataToValidate = req.query;
+                break;
+            case 'params':
+                dataToValidate = req.params;
+                break;
+            case 'body':
+            default:
+                dataToValidate = req.body;
+                break;
+        }
+
+        // Convert plain object to class instance.
+        // This is crucial for decorators to work, and for @Type to convert query param strings.
+        const instance = plainToInstance(dtoType, dataToValidate, {});
+        console.log("--------------------------------------");
+        console.log("instance: ", instance);
+        console.log("--------------------------------------");   
+        
+        try {
+            const errors = await validate(instance, validationOptions);
+
             if (errors.length > 0) {
-                // 3. If there are validation errors, return a 400 Bad Request response
                 const errorDetails = formatValidationErrors(errors);
                 const errorResponse = new ResponseEntity(
                     StatusCodes.BAD_REQUEST,
-                    "Validation failed", // Generic validation error message
-                    { errors: errorDetails } // Detailed error structure in the data/errors field
+                    "Validation failed",
+                    { errors: errorDetails }
                 );
-                res.status(StatusCodes.BAD_REQUEST).json(errorResponse);
+                // Do not call next() if response is sent
+                return res.status(StatusCodes.BAD_REQUEST).json(errorResponse);
             } else {
-                // 4. If validation passes, replace req.body with the validated DTO instance
-                // This ensures the controller receives the correctly typed and validated object
-                req.body = instance;
-                next(); // Proceed to the controller
+                // Store the validated and transformed DTO instance back onto the request object.
+                if (source === 'body') {
+                    req.body = instance; // Overwrite body, common practice
+                } else if (source === 'query') {
+                    (req as any).validatedQuery = instance; // Attach to a custom property
+                } else if (source === 'params') {
+                    (req as any).validatedParams = instance; // Attach to a custom property
+                }
+                next();
             }
-        });
+        } catch (error) {
+            // Catch errors from plainToInstance or validate itself
+            next(error); // Pass to global Express error handler
+        }
     };
 }

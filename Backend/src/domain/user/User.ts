@@ -1,76 +1,91 @@
+// @domain/user/User.ts
+
 import Name from "@domain/user/value-objects/UserName";
 import Email from "@domain/user/value-objects/UserEmail";
 import Username from "@domain/user/value-objects/UserUsername";
 import UserId from "@domain/user/value-objects/UserId";
-
+import UserRole from "@domain/user/value-objects/UserRole";
+import IPasswordHasher from "@domain/user/interfaces/IPasswordHasher";
 export default class User {
-    readonly id: UserId;
-    readonly name: Name;
-    readonly email: Email;
-    readonly username: Username;
-    readonly createdAt: Date;
+    // Make properties private to enforce encapsulation
+    private _id: UserId | undefined;
+    private _name: Name;
+    private _email: Email;
+    private _username: Username;
+    private _passwordHash: string;
+    private _createdAt: Date;
+    private _role: UserRole;
 
-    /**
-     * Private constructor to force usage of the Builder for creating User instances.
-     * @param id - The user's unique identifier.
-     * @param name - The user's name (Value Object).
-     * @param email - The user's email (Value Object).
-     * @param username - The user's username (Value Object).
-     * @param createdAt - The date/time the user was created.
-     */
-    private constructor(id: UserId, name: Name, email: Email, username: Username, createdAt: Date = new Date()) {
+    // Constructor
+    constructor(
+        id: UserId | undefined,
+        name: Name,
+        email: Email,
+        username: Username,
+        passwordHash: string,
+        createdAt: Date,
+        role: UserRole,
+    ) {
+        // Basic check that essential value objects are provided
+        if (!name || !email || !username || !passwordHash || !createdAt || !role) {
+            throw new Error("User requires name, email, username, password hash, creation date, and role.");
+        }
 
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.username = username;
-        this.createdAt = createdAt;
+        this._id = id;
+        this._name = name;
+        this._email = email;
+        this._username = username;
+        this._passwordHash = passwordHash;
+        this._createdAt = createdAt;
+        this._role = role;
+    }
+
+    // Public getters to access state
+    public getId(): UserId | undefined {
+        return this._id;
+    }
+
+    public getName(): Name {
+        return this._name;
+    }
+
+    public getEmail(): Email {
+        return this._email;
+    }
+
+    public getUsername(): Username {
+        return this._username;
     }
 
 
-    /**
-     * Builder class for constructing User instances.
-     * @class
-     */
-    public static Builder = class UserBuilder {
-        private id: UserId | undefined;
-        private name: Name | undefined;
-        private email: Email | undefined;
-        private username: Username | undefined;
-        private createdAt: Date | undefined;
-
-        setId(id: UserId): UserBuilder {
-            this.id = id;
-            return this;
-        }
-
-        setName(name: Name): UserBuilder {
-            this.name = name;
-            return this;
-        }
-
-        setEmail(email: Email): UserBuilder {
-            this.email = email;
-            return this;
-        }
-
-        setUsername(username: Username): UserBuilder {
-            this.username = username;
-            return this;
-        }
-
-        setCreatedAt(date: Date): UserBuilder {
-            this.createdAt = date;
-            return this;
-        }
-        build(): User {
-            // --- Validation happens in the Builder before creating the User ---
-            if (this.id == null || this.name == null || this.email == null || this.username == null) {
-                throw new Error("UserBuilder requires id, name, email, and username to be set before building.");
-            }
-
-            // --- Create and return the User object using its private constructor ---
-            return new User(this.id, this.name, this.email, this.username, this.createdAt);
-        }
+    public getCreatedAt(): Date {
+        return this._createdAt;
     }
+
+    public getRole(): UserRole {
+        return this._role;
+    }
+
+    public getHashedValue(): string {
+        return this._passwordHash;
+    }
+
+    public changePassword(newPasswordHash: string): void {
+        // Example Business Rule: Cannot change password if user is locked out
+        // This would require a 'lockedOut' state property, omitted for brevity.
+
+        this._passwordHash = newPasswordHash;
+    }
+
+    public async verifyPassword(plainTextPassword: string, hasher: IPasswordHasher): Promise<boolean> {
+        return hasher.verify(plainTextPassword, this._passwordHash);
+    }
+
+    public assignRole(newRole: UserRole): void {
+        this._role = newRole;
+    }
+    public changeName(newName: Name) {
+        this._name = newName;
+    }
+
 }
