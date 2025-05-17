@@ -29,6 +29,7 @@ import BookingRepository from "@src/infrastructure/db/BookingRepository";
 import { IVenueRepository } from "@src/domain/event/interfaces/IVenueRepository";
 
 import VenueRepository from "@src/infrastructure/db/VenueRepository";
+import { CreateEventHandler } from "@src/application/event/use-cases/CreateEventHandler";
 const container = new Container();
 
 container.bind<PrismaClient>(TYPES.PrismaClient).toConstantValue(new PrismaClient());
@@ -52,6 +53,8 @@ container.bind<GetAllEventsHandler>(TYPES.GetAllEventsHandler).to(GetAllEventsHa
 container.bind<IBookingRepository>(TYPES.IBookingRepository).to(BookingRepository);
 
 container.bind<IVenueRepository>(TYPES.IVenueRepository).to(VenueRepository);
+
+container.bind<CreateEventHandler>(TYPES.CreateEventHandler).to(CreateEventHandler);
 
 export {
     container,

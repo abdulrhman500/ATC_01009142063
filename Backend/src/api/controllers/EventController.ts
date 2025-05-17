@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { Request, Response, NextFunction } from 'express';
-import { controller, httpGet, interfaces } from 'inversify-express-utils';
+import { controller, httpGet, httpPost, interfaces } from 'inversify-express-utils';
 import { inject } from 'inversify';
 import { TYPES } from '@config/types';
 import ResponseEntity from '@api/shared/ResponseEntity';
@@ -16,10 +16,16 @@ import { isAuthenticated } from "@api/middleware/isAuthenticated.middleware";
 import { IdentifyUserIfLogedin } from "@api/middleware/optionalAuth.middleware";
 import { RoleType } from "@src/shared/RoleType";
 import { IJwtPayload } from "@src/domain/user/interfaces/IJwtService";
+import { CreateEventHandler } from "@src/application/event/use-cases/CreateEventHandler";
+import EventSummaryResponseDto from "../dtos/event/GetAllEvents/EventSummaryResponseDto";
+import { CreateEventCommand } from "@src/application/event/commands/CreateEventCommand";
+import { BadRequestException } from "@src/shared/exceptions/http.exception";
+import CreateEventRequestDto from "../dtos/event/CreateEvent/CreateEventRequestDto";
 @controller("/events")
 export default class EventController implements interfaces.Controller {
     constructor(
-        @inject(TYPES.GetAllEventsHandler) private readonly getAllEventsHandler: GetAllEventsHandler
+        @inject(TYPES.GetAllEventsHandler) private readonly getAllEventsHandler: GetAllEventsHandler,
+        @inject(TYPES.CreateEventHandler) private readonly createEventHandler: CreateEventHandler // Inject new handler
     ) {}
 
     /**
@@ -108,5 +114,84 @@ export default class EventController implements interfaces.Controller {
         } catch (error) {
             return next(error);
         }
+    }
+    // --- NEW: Create Event Endpoint ---
+    /**
+     * @openapi
+     * /events:
+     * post:
+     * tags: [Events]
+     * summary: Create a new event
+     * description: Creates a new event. Requires ADMIN role.
+     * security:
+     * - bearerAuth: [] # Indicates JWT Bearer token is expected for authentication
+     * requestBody:
+     * required: true
+     * content:
+     * application/json:
+     * schema:
+     * $ref: '#/components/schemas/CreateEventRequestDto'
+     * responses:
+     * '201':
+     * description: Event created successfully.
+     * content:
+     * application/json:
+     * schema:
+     * $ref: '#/components/schemas/ResponseEntity_EventSummaryResponseDto' # Or CreateEventResponseDto if different
+     * '400':
+     * description: Validation error, invalid input (e.g., non-existent categoryId/venueId), or invalid date.
+     * content:
+     * application/json:
+     * schema:
+     * $ref: '#/components/schemas/ResponseEntity_ValidationErrors'
+     * '401':
+     * description: Unauthorized - Authentication token is missing or invalid.
+     * '403':
+     * description: Forbidden - User does not have ADMIN permission.
+     * '500':
+     * description: Internal server error.
+     */
+    @httpPost(
+        "/",
+        isAuthenticated, // 1. User must be authenticated
+        IsAuthorized([RoleType.ADMIN]), // 2. User must be an ADMIN
+        ValidationMiddleware(CreateEventRequestDto, 'body') // 3. Validate request body
+    )
+    public async createEvent(req: Request, res: Response, next: NextFunction) {
+        const dto = req.body as CreateEventRequestDto; // Populated by ValidationMiddleware
+        const user = (req as any).user; // Populated by isAuthenticated
+
+        // Convert date string from DTO to Date object for the command
+        const eventDate = new Date(dto.date);
+        if (isNaN(eventDate.getTime())) {
+            // Pass error to global error handler
+            return next(new BadRequestException("Invalid event date format. Please use ISO 8601 format."));
+        }
+
+        // CreateEventCommand does not take creatorId as per your last instruction
+        const command = new CreateEventCommand(
+            dto.name,
+            dto.description,
+            eventDate, // Pass the Date object
+            dto.venueId,
+            dto.priceValue,
+            dto.priceCurrency,
+            dto.photoUrl ? dto.photoUrl.toString() : undefined,
+            dto.categoryId
+        );
+
+            // Assuming CreateEventHandler now returns { event: Event, category?: Category }
+            const { event: createdEventEntity, category: associatedCategory } =
+                await this.createEventHandler.execute(command);
+
+            const responseDtoInstance = EventSummaryResponseDto.toDtoFrom(createdEventEntity, false, associatedCategory);
+
+            const responseEntity = new ResponseEntity(
+                StatusCodes.CREATED,
+                "Event created successfully.",
+                responseDtoInstance 
+            );
+            return res.status(responseEntity.getStatus()).json(responseEntity);
+        
     }
 }

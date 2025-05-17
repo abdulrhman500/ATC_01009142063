@@ -26,5 +26,6 @@ export const TYPES = {
     GetCategoryByIdHandler : Symbol.for("GetCategoryByIdHandler"),
     
     GetAllEventsHandler: Symbol.for("GetAllEventsHandler"),
+    CreateEventHandler: Symbol.for("CreateEventHandler")
 
 };
