@@ -36,21 +36,22 @@ export default class EventPhotoUrl {
     private static isValidUrlOrPath(url: string): boolean {
         const pattern = new RegExp(
             '^(?:' +
-                '(https?:\\/\\/)' +
-                '((([a-z\\d]([a-z\\d-]*[a-z\\d])?)\\.)+[a-z]{2,}|' +
-                'localhost|' +
-                '\\d{1,3}(\\.\\d{1,3}){3}|' +
-                '\\[([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}\\])' +
-                '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' +
-                '(\\?[;&a-z\\d%_.~+=-]*)?' +
-                '(\\#[-a-z\\d_]*)?' +
-            ')' +
-            '|' +
-            '([.~]?\\/?([\\w.-]+\\/?)*[\\w.-]*)' +
-            '|' +
-            '([a-zA-Z]:\\\\[\\w\\s.-\\\\]*|\\\\\\\\[\\w\\s.-]+\\\\[\\w\\s.-\\\\]+)' +
+              // Alternative 1: Full URL
+              '(https?:\\/\\/)' + // Scheme
+              '((([a-z\\d]([a-z\\d-]*[a-z\\d])?)\\.)+[a-z]{2,}|localhost|\\d{1,3}(\\.\\d{1,3}){3}|\\[([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}\\])' + // Authority (domain, localhost, IPv4, IPv6)
+              '(\\:\\d+)?' + // Optional Port
+              '(\\/[-a-z\\d%_.~+]*)*' + // Optional Path
+              '(\\?[;&a-z\\d%_.~+=-]*)?' + // Optional Query Parameters
+              '(\\#[-a-z\\d_]*)?' + // Optional Fragment
+            // Removed the extra ')' that was here
+            '|' + // OR
+              // Alternative 2: POSIX-like relative or absolute path
+              '([.~]?\\/?([\\w.-]+\\/?)*[\\w.-]*)' +
+            '|' + // OR
+              // Alternative 3: Windows local path or UNC path
+              '([a-zA-Z]:\\\\[\\w\\s.-\\\\]*|\\\\\\\\[\\w\\s.-]+\\\\[\\w\\s.-\\\\]+)' +
             ')$',
-            'i'
+            'i' // Case-insensitive
         );
         return pattern.test(url);
     }

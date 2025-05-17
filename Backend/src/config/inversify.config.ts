@@ -22,6 +22,7 @@ import EventRepository from "@src/infrastructure/db/EventRepository";
 import { IJwtService } from "@src/domain/user/interfaces/IJwtService";
 import { JwtService } from "@src/infrastructure/security/JwtService";
 import LoginUserHandler from "@src/application/user/use-cases/LoginUserHandler";
+import GetAllEventsHandler from "@src/application/event/use-cases/GetAllEventsHandler";
 
 const container = new Container();
 
@@ -41,6 +42,7 @@ container.bind<GetAllCategoriesHandler>(TYPES.GetAllCategoriesHandler).to(GetAll
 container.bind<GetCategoryByIdHandler>(TYPES.GetCategoryByIdHandler).to(GetCategoryByIdHandler);
 container.bind<IJwtService>(TYPES.IJwtService).to(JwtService);
 container.bind<LoginUserHandler>(TYPES.LoginUserHandler).to(LoginUserHandler);
+container.bind<GetAllEventsHandler>(TYPES.GetAllEventsHandler).to(GetAllEventsHandler);
 export {
     container,
     TYPES

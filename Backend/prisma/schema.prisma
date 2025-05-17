@@ -38,6 +38,14 @@ model Event {
   translations  EventTranslation[]
   bookings      Booking[]
   tags          EventTag[]
+  //fts           Unsupported("tsvector")? 
+
+   // Add this for full-text search on name and description
+  //@@fulltext([name, description])
+  // For PostgreSQL, you might want to specify the language if not default:
+  // @@fulltext([name, description], language: "english")
+  // Or create a tsvector column manually and index it if more control is needed.
+  // For simplicity, Prisma's @@fulltext is a good start.
 }
 
 model EventTranslation {

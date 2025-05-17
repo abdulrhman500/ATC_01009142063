@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { RoleType } from '@shared/RoleType';
 import { UnauthorizedException, ForbiddenException } from '@shared/exceptions/http.exception';
 
-export function IsAuthorizedMiddleware(allowedRoles: RoleType[]) {
+export function IsAuthorized(allowedRoles: RoleType[]) {
     return (req: Request, res: Response, next: NextFunction): void => {
         const user = (req as any).user;
 

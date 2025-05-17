@@ -170,7 +170,7 @@ export default class Venue {
       return this;
     }
 
-    public withState(state: string): VenueBuilder {
+    public withState(state: string | undefined): VenueBuilder {
       this._state = state;
       return this;
     }
@@ -180,12 +180,12 @@ export default class Venue {
       return this;
     }
 
-    public withPostalCode(postalCode: string): VenueBuilder {
+    public withPostalCode(postalCode: string| undefined): VenueBuilder {
       this._postalCode = postalCode;
       return this;
     }
 
-    public withPlaceUrl(placeUrl: string): VenueBuilder {
+    public withPlaceUrl(placeUrl: string| undefined): VenueBuilder {
       this._placeUrl = placeUrl;
       return this;
     }

@@ -19,4 +19,8 @@ export default interface ICategoryRepository {
     save(category: Category): Promise<Category>;
     deleteById(id: number): Promise<boolean>;
     fetchAll(): Promise<Category[]>; // <-- ADD THIS LINE
+  
+    findByIds(ids: number[]): Promise<Category[]>;
+    findByNames(names: string[]): Promise<Category[]>;
+    findAllDescendantIds(categoryIds: number[]): Promise<number[]>; // Crucial for hierarchical filtering
 }

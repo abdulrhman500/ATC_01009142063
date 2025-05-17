@@ -9,6 +9,7 @@ import morgan from 'morgan';
 // IMPORTANT: Import all your controllers here so InversifyJS can discover them.
 import "@api/controllers/AuthController";
 import "@api/controllers/CategoryController";
+import "@api/controllers/EventController";
 
 export function configureApplication(container: Container, rootPath: string): Application {
     const server = new InversifyExpressServer(container, null, { rootPath });

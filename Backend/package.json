@@ -7,7 +7,7 @@
     "start": "tsx src/main.ts",
     "build": "tsc",
     "start:prod": "node dist/src/bootstrap.js",
-    "test": "jest test/middleware/isAuthorized.middleware.test.ts --forceExit --detectOpenHandles",
+    "test": "jest test/integration/event.controller.test.ts --forceExit --detectOpenHandles",
     "test:watch": "jest test/integration --watch",
     "compose:up": "docker compose up --build -d",
     "prisma:generate": "prisma generate",

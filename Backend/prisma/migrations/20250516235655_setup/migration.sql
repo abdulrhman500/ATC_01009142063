@@ -45,3 +45,6 @@ ALTER TABLE "EventTag" ADD CONSTRAINT "EventTag_eventId_fkey" FOREIGN KEY ("even
 
 -- AddForeignKey
 ALTER TABLE "EventTag" ADD CONSTRAINT "EventTag_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+CREATE INDEX "event_name_description_fts_idx" ON "Event" USING gin (to_tsvector('english', name || ' ' || description));

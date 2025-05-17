@@ -22,5 +22,7 @@ export const TYPES = {
     DeleteCategoryHandler: Symbol.for("DeleteCategoryHandler"),
     GetAllCategoriesHandler: Symbol.for("GetAllCategoriesHandler"),
     GetCategoryByIdHandler : Symbol.for("GetCategoryByIdHandler"),
+    
+    GetAllEventsHandler: Symbol.for("GetAllEventsHandler"),
 
 };
