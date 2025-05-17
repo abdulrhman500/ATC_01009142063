@@ -7,6 +7,8 @@ echo "Applying database migrations..."
 # Requires 'prisma' CLI to be available (should be in production dependencies).
 npx prisma migrate deploy
 
+npx prisma db seed
+
 echo "Starting application..."
 # Execute the command passed as CMD in Dockerfile (or arguments to this script)
 exec "$@"

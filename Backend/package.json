@@ -7,16 +7,22 @@
     "start": "tsx src/main.ts",
     "build": "tsc",
     "start:prod": "node dist/src/bootstrap.js",
+  
     "test": "jest test/integration/auth.controller.test.ts --forceExit --detectOpenHandles",
     "test:watch": "jest test/integration --watch",
+  
     "compose:up": "docker compose up --build -d",
     "prisma:generate": "prisma generate",
-    "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:db:push": "prisma db push",
     "dev:migrate": "npm run prisma:migrate:dev && npm run dev",
     "start:migrate": "npm run prisma:migrate:dev && npm run start",
+  
+    "prisma:seed": "tsx prisma/seed.ts",
     "build:and:start:prod:migrate": "npm run build && npm run prisma:migrate:deploy && npm run start:prod"
+  },
+  "prisma": {
+    "seed": "npm run prisma:seed"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^10.26.0",
