@@ -1,5 +1,5 @@
 ## 🚀 How to Run the Project
-
+## admin@admin.com password adminadmin
 ### option 0 : hosted on AWS EC2 -> visit http://51.44.155.221 
 
 ### ✅ Option 1: Using Docker Compose (Recommended)
