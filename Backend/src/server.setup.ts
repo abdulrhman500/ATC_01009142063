@@ -1,10 +1,11 @@
 import express, { Application } from 'express';
 import { InversifyExpressServer } from 'inversify-express-utils';
-import { Container } from 'inversify'; 
+import { Container } from 'inversify';
+import cookieParser from 'cookie-parser';
 // import swaggerUi from 'swagger-ui-express';
 // import swaggerSpec from './config/swagger.config';
 import errorHandlerMiddleware from './api/middleware/ErrorHandler.middleware';
-import morgan from 'morgan'; 
+import morgan from 'morgan';
 // IMPORTANT: Import all your controllers here so InversifyJS can discover them.
 import "@api/controllers/AuthController";
 import "@api/controllers/CategoryController";
@@ -17,6 +18,8 @@ export function configureApplication(container: Container, rootPath: string): Ap
         app.use(morgan('dev'));
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
+        app.use(cookieParser());
+
 
         // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 

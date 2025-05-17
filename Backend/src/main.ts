@@ -7,7 +7,6 @@ import { container } from "@config/inversify.config";
 import { configureApplication } from '@src/server.setup';
 import { setupGracefulShutdown } from '@config/gracefulShutdown';
 
-
 const PORT = process.env.PORT || '3000';
 const API_ROOT_PATH = process.env.API_ROOT_PATH || '/api/v1';
 const HOST = process.env.HOST || 'localhost';

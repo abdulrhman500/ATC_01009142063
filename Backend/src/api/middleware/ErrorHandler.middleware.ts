@@ -7,8 +7,8 @@ import { HttpException, NotFoundException } from '@shared/exceptions/http.except
 
 const errorHandlerMiddleware = (err: any, req: Request, res: Response, next: NextFunction): void => {
     console.error("Caught exception:", err.message); // Log the message for clarity
-console.log("Caught exception:", err); // Log the message for clarity
-console.log("Type of err:", typeof err); // Check the type of err
+    console.log("Caught exception:", err); // Log the message for clarity
+    console.log("Type of err:", typeof err); // Check the type of err
 
     if (err instanceof NotFoundException) { // ADD THIS BLOCK
         const responseEntity = new ResponseEntity(StatusCodes.NOT_FOUND, err.message, null);
@@ -19,7 +19,7 @@ console.log("Type of err:", typeof err); // Check the type of err
         res.status(responseEntity.getStatus()).json(responseEntity);
         return;
     }
-    else if(err instanceof HttpException){
+    else if (err instanceof HttpException) {
         res.status(err.statusCode).json(err);
 
     }
@@ -36,7 +36,7 @@ console.log("Type of err:", typeof err); // Check the type of err
     if (err.stack) {
         console.error("Stack:", err.stack);
     }
-    
+
     const responseEntity = new ResponseEntity(
         StatusCodes.INTERNAL_SERVER_ERROR,
         ReasonPhrases.INTERNAL_SERVER_ERROR, // Generic message for client

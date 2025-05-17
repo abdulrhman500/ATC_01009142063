@@ -7,17 +7,14 @@
     "start": "tsx src/main.ts",
     "build": "tsc",
     "start:prod": "node dist/src/bootstrap.js",
-  
-    "test": "jest test/integration/auth.controller.test.ts --forceExit --detectOpenHandles",
+    "test": "jest test/middleware/isAuthorized.middleware.test.ts --forceExit --detectOpenHandles",
     "test:watch": "jest test/integration --watch",
-  
     "compose:up": "docker compose up --build -d",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:db:push": "prisma db push",
     "dev:migrate": "npm run prisma:migrate:dev && npm run dev",
     "start:migrate": "npm run prisma:migrate:dev && npm run start",
-  
     "prisma:seed": "tsx prisma/seed.ts",
     "build:and:start:prod:migrate": "npm run build && npm run prisma:migrate:deploy && npm run start:prod"
   },
@@ -27,6 +24,7 @@
   "devDependencies": {
     "@testcontainers/postgresql": "^10.26.0",
     "@tsconfig/node20": "^20.1.5",
+    "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.9",
@@ -52,6 +50,7 @@
     "argon2": "^0.43.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "http-status-codes": "^2.3.0",
