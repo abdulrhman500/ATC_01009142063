@@ -66,7 +66,7 @@ const CustomerHeader: React.FC<CustomerHeaderProps> = ({ onSearch }) => {
           {/* Search, Theme Toggle, Language Toggle, and User Menu */}
           <div className="flex items-center">
             {/* Search Form */}
-            <form onSubmit={handleSearch} className="hidden md:flex relative mr-4 rtl:ml-4 rtl:mr-0">
+            {/* <form onSubmit={handleSearch} className="hidden md:flex relative mr-4 rtl:ml-4 rtl:mr-0">
               <input
                 type="text"
                 placeholder={t('common.search')}
@@ -75,7 +75,7 @@ const CustomerHeader: React.FC<CustomerHeaderProps> = ({ onSearch }) => {
                 className="w-48 lg:w-64 h-9 pl-9 rtl:pr-9 rtl:pl-3 pr-3 rounded-md border border-border bg-bg-secondary focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
               />
               <Search size={16} className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 transform -translate-y-1/2 text-text-tertiary" />
-            </form>
+            </form> */}
             
             <ThemeToggle />
             <LanguageToggle />

@@ -1,23 +1,40 @@
-import { AxiosError } from 'axios';
 import api from './api'; // Your configured Axios instance
+import { AxiosError } from 'axios';
 
+// --- Frontend Data Structures ---
+
+// This interface should match the fields from your backend's EventSummaryResponseDto
 export interface EventSummary {
-  id: string; // Backend DTO ID is string
-  name: string; // Was 'title' in your mock, backend uses 'name'
+  id: string;
+  name: string;
   descriptionShort: string;
-  date: string; // ISO date string from backend
-  // time: string; // Backend DTO combines date and time in the 'date' ISO string
+  date: string; // ISO date-time string from backend
   venueName: string;
-  price: string; // e.g., "50.00 USD"
-  photoUrl: string; // Was 'imageUrl' in your mock
+  price: string; // Formatted price string, e.g., "50.00 USD"
+  photoUrl: string; // Optional in schema, but EventSummaryResponseDto likely provides a default or makes it non-null
   categoryName?: string;
-  isBooked: boolean;
-  // venueId and categoryId might not be needed if venueName and categoryName are present
-  // venue?: any; // If you want to keep the full venue object from mock, backend DTO has venueName
-  // category?: any; // If you want to keep the full category object from mock, backend DTO has categoryName
+  isBooked: boolean; // Crucial for displaying booking status
+  // Include other fields if your EventSummaryResponseDto sends more (e.g., original priceValue, currency)
+  // For simplicity, we assume the above is what EventCard needs.
 }
 
-// This interface should match your backend's GetAllEventsResponseDto (the payload part)
+// For creating an event (matches backend's CreateEventRequestDto)
+export interface CreateEventData {
+  name: string;
+  description: string;
+  date: string; // ISO date-time string (e.g., from new Date().toISOString())
+  venueId: number;
+  categoryId?: number | null;
+  priceValue: number;
+  priceCurrency: string;
+  photoUrl?: string | null;
+}
+
+// For updating an event (typically Partial of CreateEventData)
+export interface UpdateEventData extends Partial<CreateEventData> { }
+
+
+// For paginated list of events (matches backend's GetAllEventsResponseDto payload)
 export interface PaginatedEventsApiResponse {
   data: EventSummary[];
   totalItems: number;
@@ -26,35 +43,36 @@ export interface PaginatedEventsApiResponse {
   totalPages: number;
 }
 
-// Interface for the actual API response if wrapped in ResponseEntity
+// Standard API response wrapper used by your backend
 interface ApiResponseEntity<T> {
   statusCode: number;
   message: string;
   payload: T;
 }
+const EVENTS_API_PATH = '/events';
+const BOOKING_API_PATH = '/booking'; // Path for the BookingController
 
-const EVENTS_API_PATH = '/events'; // Relative to axios baseURL (e.g., /api/v1)
 
 const eventService = {
+  /**
+   * Fetches a paginated and filtered list of events.
+   */
   getEvents: async (
     page: number = 1,
-    limit: number = 8, // Default limit as used in your EventsPage
+    limit: number = 8,
     textSearch?: string,
-    categoryIds?: string[],
-    categoryNames?: string[] // Added for completeness, though EventsPage doesn't use it yet
+    categoryIds?: string[], // Expects string array, joins to comma-separated for API
+    categoryNames?: string[]
   ): Promise<PaginatedEventsApiResponse> => {
-    const params: Record<string, any> = {
-      page,
-      limit,
-    };
+    const params: Record<string, any> = { page, limit };
     if (textSearch && textSearch.trim() !== '') {
       params.textSearch = textSearch.trim();
     }
     if (categoryIds && categoryIds.length > 0) {
-      params.categoryIds = categoryIds.join(','); // Join string array
+      params.categoryIds = categoryIds.join(',');
     }
     if (categoryNames && categoryNames.length > 0) {
-      params.categoryNames = categoryNames.join(','); // Backend expects comma-separated string
+      params.categoryNames = categoryNames.join(',');
     }
 
     try {
@@ -62,110 +80,115 @@ const eventService = {
         EVENTS_API_PATH,
         { params }
       );
-      return response.data.payload; // Assuming backend uses ResponseEntity with a 'payload' field
+      return response.data.payload;
     } catch (error: any) {
-      console.error('Failed to fetch events:', error);
-      // Re-throw a more generic error or the error data from backend if available
-      if (error.response && error.response.data && error.response.data.message) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error('Failed to fetch events. Please try again later.');
+      console.error('Failed to fetch events:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to load events. Please try again later.');
     }
   },
 
-  // --- Other event service methods to be implemented with real API calls ---
-  getEvent: async (id: number): Promise<EventSummary | null> => {
-    // TODO: Implement API call to GET /events/:id
-    console.warn(`getEvent(${id}) is using mock implementation.`);
-    // Placeholder:
-    // const response = await api.get<ApiResponseEntity<EventSummary>>(`${EVENTS_API_PATH}/${id}`);
-    // return response.data.payload;
-    return null; // Replace with actual implementation
-  },
-
-  createEvent: async (eventData: any): Promise<EventSummary> => {
-    // TODO: Implement API call to POST /events (Admin only)
-    console.warn(`createEvent is using mock implementation.`);
-    // const response = await api.post<ApiResponseEntity<EventSummary>>(EVENTS_API_PATH, eventData);
-    // return response.data.payload;
-    throw new Error("Not implemented");
-  },
-
-
-  updateEvent: async (
-    id: string,
-    eventData: {
-      name: string;
-      description: string;
-      date: string;
-      venueId: string;
-      categoryId?: string | null;
-      priceValue?: number;
-      priceCurrency?: string;
-      photoUrl?: string | null;
-    }
-  ): Promise<EventSummary> => {
+  /**
+   * Fetches a single event by its ID.
+   */
+  getEventById: async (id: string | number): Promise<EventSummary | null> => {
     try {
-      // Convert date to ISO string and prepare payload
-      const payload = {
-        ...eventData,
-        date: new Date(eventData.date).toISOString(),
-        categoryId: eventData.categoryId || null, // Ensure null instead of undefined
-        photoUrl: eventData.photoUrl || null      // Ensure null instead of undefined
-      };
+      const response = await api.get<ApiResponseEntity<EventSummary[]>>(`${EVENTS_API_PATH}?limit=50`);
+      ;
+      return response.data.payload.filter(event => event.id == id)[0];
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        console.warn(`Event with ID ${id} not found.`);
+        return null;
+      }
+      console.error(`Failed to fetch event ${id}:`, error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || `Failed to load event ${id}.`);
+    }
+  },
 
-      const response = await api.put<ApiResponseEntity<BackendEventDto>>(
+  /**
+   * Creates a new event. Requires ADMIN privileges.
+   */
+  createEvent: async (eventData: CreateEventData): Promise<EventSummary> => {
+    try {
+      const response = await api.post<ApiResponseEntity<EventSummary>>(EVENTS_API_PATH, eventData);
+      return response.data.payload;
+    } catch (error: any) {
+      console.error('Failed to create event:', error.response?.data || error.message);
+      throw error.response?.data || new Error('Failed to create event.');
+    }
+  },
+
+  /**
+   * Updates an existing event. Requires ADMIN privileges.
+   * Assumes backend uses PATCH for partial updates. Use PUT if it's a full replace.
+   */
+  updateEvent: async (id: string | number, eventData: UpdateEventData): Promise<EventSummary> => {
+    try {
+      // Ensure date is in ISO string format if being updated
+      const payload = eventData.date ? { ...eventData, date: new Date(eventData.date).toISOString() } : eventData;
+
+      const response = await api.patch<ApiResponseEntity<EventSummary>>(
         `${EVENTS_API_PATH}/${id}`,
         payload
       );
-
-      return mapBackendEventToSummary(response.data.payload);
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiResponseEntity<null>>;
-      console.error(`Failed to update event ${id}:`, axiosError.response?.data?.message || axiosError.message);
-      throw new Error(axiosError.response?.data?.message || 'Failed to update event');
+      return response.data.payload;
+    } catch (error: any) {
+      console.error(`Failed to update event ${id}:`, error.response?.data || error.message);
+      throw error.response?.data || new Error('Failed to update event.');
     }
   },
 
-  deleteEvent: async (id: string): Promise<void> => {
+  /**
+   * Deletes an event. Requires ADMIN privileges.
+   */
+  deleteEvent: async (id: string | number): Promise<void> => {
     try {
-      await api.delete(`${EVENTS_API_PATH}/${id}`);
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiResponseEntity<null>>;
-      console.error(`Failed to delete event ${id}:`, axiosError.response?.data?.message || axiosError.message);
-      throw new Error(axiosError.response?.data?.message || 'Failed to delete event');
+      await api.delete<ApiResponseEntity<null>>(`${EVENTS_API_PATH}/${id}`);
+    } catch (error: any) {
+      console.error(`Failed to delete event ${id}:`, error.response?.data || error.message);
+      throw error.response?.data || new Error('Failed to delete event.');
     }
   },
 
-  bookEvent: async (eventId: number): Promise<void> => {
-    // TODO: Implement API call to POST /events/:eventId/book (Customer only)
-    // This endpoint needs to be created on the backend.
-    console.warn(`bookEvent(${eventId}) is using mock implementation. Needs backend endpoint.`);
-    // Example: await api.post(`${EVENTS_API_PATH}/${eventId}/book`);
-    return new Promise(resolve => setTimeout(resolve, 300)); // Simulate API call
-  },
+  /**
+   * Books an event for the currently authenticated CUSTOMER.
+   */
+  bookEvent: async (eventId: string | number): Promise<void> => {
+    // Ensure eventId is a number, as the corrected backend DTO will expect it.
+    const numericEventId = typeof eventId === 'string' ? parseInt(eventId, 10) : eventId;
 
-  // getBookedEvents might not be needed if 'isBooked' comes with getEvents
+    if (isNaN(numericEventId) || numericEventId <= 0) {
+      const errorMsg = 'Invalid Event ID provided for booking.';
+      console.error(errorMsg);
+      // Optionally, you can throw a more specific error type here if you have one
+      throw new Error(errorMsg);
+    }
+
+    try {
+      // The backend controller is POST /booking and expects { "eventId": number } in the body.
+      // The response from backend for successful booking (201 Created) might contain the booking details
+      // or just a success message. For Promise<void>, we don't use the response payload here.
+      await api.post<ApiResponseEntity<any>>( // 'any' for payload as we don't use it for Promise<void>
+        `${BOOKING_API_PATH}`, // Endpoint for creating a booking
+        { eventId: numericEventId } // Send eventId in the request body
+      );
+      // If successful, the promise resolves.
+    } catch (error: any) {
+      const axiosError = error as AxiosError<ApiResponseEntity<null>>; // Type the error for better access
+      const backendErrorMessage = axiosError.response?.data?.message;
+      const errorMessage = backendErrorMessage || axiosError.message || 'Failed to book event.';
+
+      console.error(`Failed to book event ${numericEventId}:`, errorMessage, axiosError.response?.data);
+      throw new Error(errorMessage); // Re-throw with a potentially more user-friendly message or the backend message
+    }
+  }
+
+  // getBookedEvents is likely not needed if `isBooked` flag comes with `getEvents`
+  // for the authenticated user. If you need a separate list of only booked events,
+  // a dedicated backend endpoint and service method would be required.
 };
 
 export default eventService;
 
-// Export the EventSummary type for use in components
+// Re-export EventSummary as FrontendEvent for easier usage in components
 export type { EventSummary as FrontendEvent };
-
-function mapBackendEventToSummary(backendEvent: BackendEventDto): EventSummary | PromiseLike<EventSummary> {
-
-  return {
-    id: backendEvent.id,
-    name: backendEvent.name,
-    descriptionShort: backendEvent.description.substring(0, 100), // Truncate description
-    date: backendEvent.date,
-    venueName: backendEvent.venue.name,
-    price: backendEvent.priceValue
-      ? `${backendEvent.priceValue.toFixed(2)} ${backendEvent.priceCurrency || 'USD'}`
-      : 'FREE',
-    photoUrl: backendEvent.photoUrl || '/placeholder-event.jpg',
-    categoryName: backendEvent.category?.name,
-    isBooked: backendEvent.isBooked
-  }
-}
