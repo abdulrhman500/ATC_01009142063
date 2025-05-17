@@ -5,7 +5,7 @@ import {IBookingRepository  }from '@src/domain/booking/interfaces/IBookingReposi
 // import Booking from '@domain/booking/Booking'; // Define this if you have a rich Booking domain entity
 
 @injectable()
-export class PrismaBookingRepository implements IBookingRepository {
+export default class PrismaBookingRepository implements IBookingRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) {}
 
     async findUserBookedEventIds(userId: string | number, eventIds: number[]): Promise<Set<number>> {

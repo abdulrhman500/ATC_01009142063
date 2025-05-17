@@ -23,7 +23,9 @@ import { IJwtService } from "@src/domain/user/interfaces/IJwtService";
 import { JwtService } from "@src/infrastructure/security/JwtService";
 import LoginUserHandler from "@src/application/user/use-cases/LoginUserHandler";
 import GetAllEventsHandler from "@src/application/event/use-cases/GetAllEventsHandler";
+import { IBookingRepository } from "@src/domain/booking/interfaces/IBookingRepository";
 
+import BookingRepository from "@src/infrastructure/db/BookingRepository";
 const container = new Container();
 
 container.bind<PrismaClient>(TYPES.PrismaClient).toConstantValue(new PrismaClient());
@@ -43,6 +45,8 @@ container.bind<GetCategoryByIdHandler>(TYPES.GetCategoryByIdHandler).to(GetCateg
 container.bind<IJwtService>(TYPES.IJwtService).to(JwtService);
 container.bind<LoginUserHandler>(TYPES.LoginUserHandler).to(LoginUserHandler);
 container.bind<GetAllEventsHandler>(TYPES.GetAllEventsHandler).to(GetAllEventsHandler);
+
+container.bind<IBookingRepository>(TYPES.IBookingRepository).to(BookingRepository);
 export {
     container,
     TYPES
