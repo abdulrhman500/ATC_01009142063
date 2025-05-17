@@ -96,7 +96,7 @@ const CustomerHeader: React.FC<CustomerHeaderProps> = ({ onSearch }) => {
                   <div className="origin-top-right absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-48 rounded-md shadow-lg bg-bg-primary border border-border ring-1 ring-black ring-opacity-5 z-10 animate-fade-in">
                     <div className="py-1 border-b border-border">
                       <div className="px-4 py-2">
-                        <p className="text-sm font-medium text-text-primary">{user?.name}</p>
+                        <p className="text-sm font-medium text-text-primary">{user?.fullName}</p>
                         <p className="text-xs text-text-tertiary">{user?.email}</p>
                       </div>
                     </div>

@@ -13,9 +13,9 @@ const CustomerLayout: React.FC = () => {
     <div className="min-h-screen bg-bg-secondary flex flex-col">
       <CustomerHeader />
       <div className="flex flex-1 flex-col md:flex-row">
-        {showSidebar && (
+        {/* {showSidebar && (
           <CustomerSidebar className={`w-full md:w-64 ${isRTL ? 'md:order-last' : 'md:order-first'}`} />
-        )}
+        )} */}
         <main className={`flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full ${!showSidebar && 'md:px-8'}`}>
           <Outlet />
         </main>

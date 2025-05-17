@@ -1,143 +1,150 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import categoryService, { Category } from '../../services/categoryService';
-import CategoryTreeItem from './CategoryTreeItem';
+import categoryService, { FrontendCategoryNode } from '../../services/categoryService';
+import CategoryTreeItem from './CategoryTreeItem'; // Uses the above component
+import { Loader2, AlertTriangle, Filter as FilterIcon, RefreshCw } from 'lucide-react';
+import Button from '../common/Button';
 
 interface CustomerSidebarProps {
-  className?: string;
-  onCategorySelect?: (categoryIds: number[]) => void;
+    className?: string;
+    onCategorySelectionChange: (selectedIds: string[]) => void; // Callback with string IDs
+    initialSelectedCategoryIds?: string[];
 }
 
-const CustomerSidebar: React.FC<CustomerSidebarProps> = ({ className, onCategorySelect }) => {
-  const { t } = useTranslation();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  
-  // Fetch categories on component mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        const categoryTree = await categoryService.getCategoryTree();
-        setCategories(categoryTree);
-        setError(null);
-      } catch (err) {
-        setError('Failed to load categories');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchCategories();
-  }, []);
-  
-  // Handle category selection
-  const handleCategorySelect = (categoryId: number, isSelected: boolean) => {
-    let newSelectedCategories: number[];
-    
-    if (isSelected) {
-      newSelectedCategories = [...selectedCategories, categoryId];
-      
-      // Find all children of this category and add them too
-      const findAllChildren = (categoryList: Category[], id: number): number[] => {
-        const directChildren = categoryList.filter(c => c.parentCategoryId === id).map(c => c.id);
-        const allChildren = [...directChildren];
-        
-        for (const childId of directChildren) {
-          allChildren.push(...findAllChildren(categoryList, childId));
+const CustomerSidebar: React.FC<CustomerSidebarProps> = ({
+    className,
+    onCategorySelectionChange,
+    initialSelectedCategoryIds = [],
+}) => {
+  console.log('CustomerSidebar received onCategorySelectionChange:', typeof onCategorySelectionChange, onCategorySelectionChange); // <<< ADD THIS LOG
+    const { t } = useTranslation();
+    const [categoryTree, setCategoryTree] = useState<FrontendCategoryNode[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<string[]>(initialSelectedCategoryIds);
+
+    // Helper to get all IDs in a subtree (self + descendants)
+    const getAllIdsInSubtree = useCallback((node: FrontendCategoryNode): string[] => {
+        let ids = [node.id];
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(child => {
+                ids = ids.concat(getAllIdsInSubtree(child));
+            });
         }
-        
-        return allChildren;
-      };
-      
-      // Get flat list of all categories
-      const allCategoriesList = categories.reduce((acc: Category[], cat) => {
-        acc.push(cat);
-        if (cat.children) {
-          const flattenChildren = (children: Category[]) => {
-            for (const child of children) {
-              acc.push(child);
-              if (child.children) {
-                flattenChildren(child.children);
-              }
+        return ids;
+    }, []);
+    
+    // Helper to find a node in the tree
+    const findNodeInTree = useCallback((nodes: FrontendCategoryNode[], id: string): FrontendCategoryNode | null => {
+        for (const node of nodes) {
+            if (node.id === id) return node;
+            if (node.children) {
+                const found = findNodeInTree(node.children, id);
+                if (found) return found;
             }
-          };
-          if (cat.children) flattenChildren(cat.children);
         }
-        return acc;
-      }, []);
-      
-      const childrenIds = findAllChildren(allCategoriesList, categoryId);
-      newSelectedCategories = [...newSelectedCategories, ...childrenIds];
-      
-    } else {
-      newSelectedCategories = selectedCategories.filter(id => id !== categoryId);
-      
-      // Find all children of this category and remove them too
-      const removeChildren = (category: Category) => {
-        if (category.id === categoryId && category.children) {
-          for (const child of category.children) {
-            newSelectedCategories = newSelectedCategories.filter(id => id !== child.id);
-            removeChildren(child);
-          }
-        } else if (category.children) {
-          for (const child of category.children) {
-            removeChildren(child);
-          }
+        return null;
+    }, []);
+
+    const fetchCategories = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const tree = await categoryService.getCategoryTree();
+            setCategoryTree(tree);
+        } catch (catErr: any) {
+            setError(catErr.message || t('common.categoriesLoadError', 'Failed to load categories.'));
+        } finally {
+            setIsLoading(false);
         }
-      };
-      
-      // Remove children from all selected categories
-      for (const category of categories) {
-        removeChildren(category);
+    }, [t]);
+
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
+
+    // Propagate changes to parent
+    useEffect(() => {
+      if(onCategorySelectionChange) {
+        onCategorySelectionChange(selectedIds);
       }
-    }
-    
-    // Update state with unique IDs only
-    const uniqueIds = Array.from(new Set(newSelectedCategories));
-    setSelectedCategories(uniqueIds);
-    
-    // Notify parent component of selection change
-    if (onCategorySelect) {
-      onCategorySelect(uniqueIds);
-    }
-  };
-  
-  return (
-    <aside className={clsx('bg-bg-primary border-b md:border-r rtl:md:border-l rtl:md:border-r-0 border-border py-4', className)}>
-      <div className="px-4 mb-4">
-        <h2 className="font-semibold text-lg">{t('common.filter')}</h2>
-      </div>
-      
-      <div className="px-4">
-        <h3 className="font-medium text-md mb-2">{t('events.eventCategory')}</h3>
-        
-        {loading ? (
-          <div className="py-4 text-text-tertiary text-sm">{t('common.loading')}</div>
-        ) : error ? (
-          <div className="py-4 text-error-500 text-sm">{error}</div>
-        ) : categories.length === 0 ? (
-          <div className="py-4 text-text-tertiary text-sm">{t('common.noResults')}</div>
-        ) : (
-          <div className="space-y-1">
-            {categories.map(category => (
-              <CategoryTreeItem
-                key={category.id}
-                category={category}
-                selectedCategories={selectedCategories}
-                onSelect={handleCategorySelect}
-                level={0}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </aside>
-  );
+    }, [selectedIds, onCategorySelectionChange]);
+
+
+    const handleCategoryToggle = (categoryId: string) => {
+        const toggledNode = findNodeInTree(categoryTree, categoryId);
+        if (!toggledNode) return;
+
+        const idsToAffect = getAllIdsInSubtree(toggledNode);
+
+        setSelectedIds(prevSelected => {
+            const currentlyAllAffectedAreSelected = idsToAffect.every(id => prevSelected.includes(id));
+            
+            if (currentlyAllAffectedAreSelected) {
+                // Deselect this node and all its children
+                return prevSelected.filter(id => !idsToAffect.includes(id));
+            } else {
+                // Select this node and all its children
+                return Array.from(new Set([...prevSelected, ...idsToAffect]));
+            }
+        });
+    };
+
+    const clearSelection = () => {
+        setSelectedIds([]);
+    };
+
+    return (
+        <div className={clsx(
+            'p-5 bg-white dark:bg-slate-800 dim:bg-slate-700 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 dim:border-slate-600',
+            className
+        )}>
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-lg text-text-primary dark:text-white dim:text-slate-100 flex items-center">
+                    <FilterIcon size={20} className="mr-2 rtl:ml-2 rtl:mr-0 text-primary-600 dark:text-primary-400" />
+                    {t('common.categories', 'Categories')}
+                </h3>
+                {selectedIds.length > 0 && (
+                    <Button
+                        size="sm"
+                        onClick={clearSelection}
+                        className="text-xs px-1 py-0.5 text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                        {t('common.clear', 'Clear')}
+                    </Button>
+                )}
+            </div>
+
+            {isLoading ? (
+                <div className="flex items-center justify-center py-10 text-text-secondary dark:text-gray-400">
+                    <Loader2 size={24} className="animate-spin mr-2 rtl:ml-2 rtl:mr-0" />
+                    {t('common.loadingCategories', 'Loading...')}
+                </div>
+            ) : error ? (
+                <div className="py-3 px-3 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-md text-sm flex flex-col items-center text-center">
+                    <AlertTriangle size={20} className="mb-1" /> {error}
+                    <Button variant="outline" size="sm" onClick={fetchCategories} className="mt-2 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-800/50">
+                        <RefreshCw size={14} className="mr-1"/> {t('common.retry', 'Retry')}
+                    </Button>
+                </div>
+            ) : categoryTree.length === 0 ? (
+                <p className="text-text-secondary dark:text-gray-400 text-sm text-center py-2">{t('common.noCategoriesFound', 'No categories found.')}</p>
+            ) : (
+                <div className="space-y-0.5 max-h-96 lg:max-h-[calc(100vh-18rem)] overflow-y-auto pr-1 rtl:pl-1 rtl:pr-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-600 hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-slate-500">
+                    {categoryTree.map(category => (
+                        <CategoryTreeItem
+                            key={category.id}
+                            category={category}
+                            selectedCategories={selectedIds}
+                            onToggleSelect={handleCategoryToggle} // Renamed prop for clarity
+                            defaultOpen={true} // Open top-level categories by default
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default CustomerSidebar;
